@@ -50,7 +50,10 @@ def adapt_snippet(source: str, small: bool) -> str:
     if depth:
         raise ValueError('Unbalanced upstream comment')
     source = ''.join(clean)
-    source = source.replace('<div style="position: relative;">', '<div class="mes-portrait mes-portrait-' + ('small' if small else 'large') + '" role="img" aria-label="人物立绘">', 1)
+    wrapper = '<div class="mes-portrait mes-portrait-' + ('small' if small else 'large') + '" role="img" aria-label="人物立绘">'
+    source, count = re.subn(r'<div\s+style="(?=[^"]*\bposition:\s*relative\b)[^"]*">', wrapper, source, count=1)
+    if count != 1:
+        raise ValueError('Portrait wrapper changed: ' + source[:800])
     # Modern UI has its own dimensions; repeated cards must not reuse element IDs.
     source = re.sub(r'id="([^\"]+-layer(?:-s|-ghost)?)"', r'class="mes-\1"', source)
     # If no upper garment is present, retain the null initialization rather than
@@ -124,7 +127,7 @@ def build(data: bytes) -> bytes:
     boot['tweeFileList'].append('game/PlayerPortrait.twee')
     player_rules = [
         ('Character', '<div id="character-dialog" style="width: 38em">', 'game/CharacterInsert.twee'),
-        ('StoryCaption', '<<if _finishedchargen>>\n    <<run setup.Needs.repair()>>', 'game/SidebarInsert.twee'),
+        ('StoryCaption', '<<run setup.Needs.repair()>>', 'game/SidebarInsert.twee'),
     ]
     for passage_name, anchor, filename in player_rules:
         for game in ['game.html', 'game-polyfill.html']:
