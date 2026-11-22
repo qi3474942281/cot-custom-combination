@@ -1,0 +1,24 @@
+{
+  "tag": "v0.8.5e-1.0.0",
+  "version": "0.8.5e",
+  "build": "cot-085e-1",
+  "source": "https://github.com/BlackTeaPie/Course-of-Temptation-Chinese-Localization/releases/tag/v0.8.5e-1.0.0",
+  "assets": {
+    "CoT-ModLoader-v0.8.5e-v2.101.1-polyfill.zip": {
+      "url": "https://github.com/BlackTeaPie/Course-of-Temptation-Chinese-Localization/releases/download/v0.8.5e-1.0.0/CoT-ModLoader-v0.8.5e-v2.101.1-polyfill.zip",
+      "sha256": "2262b5369d699759cd5592f737709a1fe2c965a0bcb2124da88e64ac552b28b3"
+    },
+    "CoT-ModLoader-v0.8.5e-v2.101.1.zip": {
+      "url": "https://github.com/BlackTeaPie/Course-of-Temptation-Chinese-Localization/releases/download/v0.8.5e-1.0.0/CoT-ModLoader-v0.8.5e-v2.101.1.zip",
+      "sha256": "0da7c5f65211f783e64d832295234cdf51b74a437e2e9195eec588844c239234"
+    },
+    "GameOriginalImagePack-v0.8.5e.mod.zip": {
+      "url": "https://github.com/BlackTeaPie/Course-of-Temptation-Chinese-Localization/releases/download/v0.8.5e-1.0.0/GameOriginalImagePack-v0.8.5e.mod.zip",
+      "sha256": "872b59c679460aff335964c47f2eb4b6f94ab697386bbece0b8d477d80d74045"
+    },
+    "ModI18N-0.8.5e-chs-1.0.0.mod.zip": {
+      "url": "https://github.com/BlackTeaPie/Course-of-Temptation-Chinese-Localization/releases/download/v0.8.5e-1.0.0/ModI18N-0.8.5e-chs-1.0.0.mod.zip",
+      "sha256": "ea9dadaca853e243db914a642f9580a2b9ad9682f2df4f8aa2467f59ed86505e"
+    }
+  }
+}

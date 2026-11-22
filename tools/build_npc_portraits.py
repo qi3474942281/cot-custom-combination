@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Adapt Maenoko's mobile NPC portraits to this repository's CoT 0.8.0h UI."""
+"""Adapt Maenoko's mobile NPC portraits to this repository's CoT 0.8.5e UI."""
 from __future__ import annotations
 import argparse
 import hashlib
@@ -50,7 +50,10 @@ def adapt_snippet(source: str, small: bool) -> str:
     if depth:
         raise ValueError('Unbalanced upstream comment')
     source = ''.join(clean)
-    source = source.replace('<div style="position: relative;">', '<div class="mes-portrait mes-portrait-' + ('small' if small else 'large') + '" role="img" aria-label="人物立绘">', 1)
+    wrapper = '<div class="mes-portrait mes-portrait-' + ('small' if small else 'large') + '" role="img" aria-label="人物立绘">'
+    source, count = re.subn(r'<div\s+style="(?=[^"]*\bposition:\s*relative\b)[^"]*">', wrapper, source, count=1)
+    if count != 1:
+        raise ValueError('Portrait wrapper changed: ' + source[:800])
     # Modern UI has its own dimensions; repeated cards must not reuse element IDs.
     source = re.sub(r'id="([^\"]+-layer(?:-s|-ghost)?)"', r'class="mes-\1"', source)
     # If no upper garment is present, retain the null initialization rather than
@@ -87,7 +90,7 @@ def build(data: bytes) -> bytes:
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         files = {name: archive.read(name) for name in archive.namelist() if not name.endswith('/')}
     boot = json.loads(files['boot.json'])
-    boot['version'] = '1.0.6.2-cot080h.2'
+    boot['version'] = '1.0.6.2-cot085e.1'
     boot['styleFileList'] = ['modules/containerfornpccomponents.css', 'modules/current-ui.css']
     boot['scriptFileList'] = ['modules/portrait-assets.js']
     boot['additionFile'].append('COMPATIBILITY.md')
@@ -99,7 +102,7 @@ def build(data: bytes) -> bytes:
         rule['all'] = False
         rule['debug'] = False
         files[rule['replaceFile']] = adapt_snippet(files[rule['replaceFile']].decode('utf-8-sig'), small).encode()
-        for game in ['index.html', 'polyfill.html']:
+        for game in ['game.html', 'game-polyfill.html']:
             raw = (ROOT / 'vanilla' / game).read_text()
             passage = re.search(r'<tw-passagedata\b[^>]*name="' + rule['passage'] + r'"[^>]*>(.*?)</tw-passagedata>', raw, re.S)
             if not passage or html.unescape(passage[1]).count(rule['findString']) != 1:
@@ -124,10 +127,10 @@ def build(data: bytes) -> bytes:
     boot['tweeFileList'].append('game/PlayerPortrait.twee')
     player_rules = [
         ('Character', '<div id="character-dialog" style="width: 38em">', 'game/CharacterInsert.twee'),
-        ('StoryCaption', '<<if _finishedchargen>>\n    <<run setup.Needs.repair()>>', 'game/SidebarInsert.twee'),
+        ('StoryCaption', '<<run setup.Needs.repair()>>', 'game/SidebarInsert.twee'),
     ]
     for passage_name, anchor, filename in player_rules:
-        for game in ['index.html', 'polyfill.html']:
+        for game in ['game.html', 'game-polyfill.html']:
             raw = (ROOT / 'vanilla' / game).read_text()
             passage = re.search(r'<tw-passagedata\b[^>]*name="' + passage_name + r'"[^>]*>(.*?)</tw-passagedata>', raw, re.S)
             if not passage or html.unescape(passage[1]).count(anchor) != 1:
@@ -137,7 +140,7 @@ def build(data: bytes) -> bytes:
                              'replaceFile': filename, 'all': False, 'debug': False})
     files['modules/current-ui.css'] = CSS.encode()
     files['modules/portrait-assets.js'] = ('(() => {\nconst paths = new Set(' + json.dumps(boot['imgFileList'], ensure_ascii=False) + ');\nsetup.MesPortrait = {image(path, fallback) {return paths.has(path) ? path : fallback;}};\n})();\n').encode()
-    files['COMPATIBILITY.md'] = ('# CoT 0.8.0h compatibility\n\nOriginal portraits and artwork: Maenoko / NPC-Visualization-Mod, mobile v1.0.6.2.\n' + SOURCE + '\n\nAdaptation: current DisplayNPC and SocialWidgets insertion points; player portraits in Character and StoryCaption; scoped responsive layers; guards for uncovered upper bodies; fallback art for new clothing/hair missing from the original pack.\nOriginal README and all artwork are retained.\n').encode()
+    files['COMPATIBILITY.md'] = ('# CoT 0.8.5e compatibility\n\nOriginal portraits and artwork: Maenoko / NPC-Visualization-Mod, mobile v1.0.6.2.\n' + SOURCE + '\n\nAdaptation: current DisplayNPC and SocialWidgets insertion points; player portraits in Character and StoryCaption; scoped responsive layers; guards for uncovered upper bodies; fallback art for new clothing/hair missing from the original pack.\nOriginal README and all artwork are retained.\n').encode()
     files['boot.json'] = (json.dumps(boot, ensure_ascii=False, indent=2) + '\n').encode()
     output = io.BytesIO()
     with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED) as archive:

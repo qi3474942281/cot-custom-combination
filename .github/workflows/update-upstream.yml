@@ -35,7 +35,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Update and publish
+      - name: Check upstream without replacing the validated game
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: python update_upstream.py --publish
+        run: python update_upstream.py --check
