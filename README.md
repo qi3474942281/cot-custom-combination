@@ -42,3 +42,15 @@ Actions 页面手动运行 `Update upstream release` 工作流，或发送类型
 
 工作流使用仓库自带的 `GITHUB_TOKEN` 提交并推送更新，需要仓库允许 GitHub
 Actions 对内容进行写入。
+
+## NPC 人物立绘
+
+已随游戏自动加载 Maenoko 的 [NPC-Visualization-Mod](https://github.com/Maenoko/NPC-Visualization-Mod) 手机版，并为当前 CoT 0.8.0h 的人物界面做兼容处理。立绘显示在“人物”列表和人物详情页，随外观、发型及衣服变化。
+
+`mods/NPCVisualization.mod.zip` 保留原作者的图片和 README。兼容包由 `tools/build_npc_portraits.py` 构建；脚本会校验固定上游发行包的 SHA-256，以及标准/兼容模式中的插入位置。重建方式：
+
+```sh
+python tools/build_npc_portraits.py
+```
+
+没有对应图片的新增发型和衣服会使用原图包中的回退图片。
