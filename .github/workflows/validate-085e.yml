@@ -9,21 +9,42 @@ concurrency:
   cancel-in-progress: false
 jobs:
   validate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
-      - name: Inspect pinned release and storage identity
+          python-version: "3.12"
+      - name: Preserve old engine for save recognition test
+        run: |
+          mkdir .compat-old
+          git archive origin/backup/cot080h-before-085e-20261123 vanilla mods modList.json | tar -x -C .compat-old
+      - name: Build pinned upgrade
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: python tools/inspect_upgrade.py
+        run: python update_upstream.py --force
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install browser checks
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium webkit
+      - name: Test backup, cached mods, game boot and save recognition
+        run: node tools/test_upgrade.cjs
+      - name: Commit validated candidate on upgrade branch only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html vanilla mods
+          git diff --cached --quiet && exit 0
+          git commit -m "Update to verified Chinese 0.8.5e with portraits, hotfix and save backup"
+          git push origin HEAD:upgrade/cot-085e
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: upgrade-inspection
-          path: upgrade-inspection.json
+          name: upgrade-test-results
+          path: upgrade-test-results.json

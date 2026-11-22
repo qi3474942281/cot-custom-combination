@@ -155,34 +155,11 @@ def game_version(loader_name: str) -> str:
 
 def update_index(index_path: Path, loader_name: str, version: str) -> None:
     content = index_path.read_text(encoding="utf-8")
-    content, normal_count = re.subn(
-        r'href="vanilla/(?:CoT-ModLoader-[^"]+(?<!-polyfill)|index)\.html"',
-        'href="vanilla/index.html"',
-        content,
-        count=1,
-    )
-    content, polyfill_count = re.subn(
-        r'<a(?: href="vanilla/(?:CoT-ModLoader-[^"]+-polyfill|polyfill)\.html" target="_self"| aria-disabled="true")>'
-        r"兼容模式(?:（暂未提供）)?</a>",
-        '<a href="vanilla/polyfill.html" target="_self">兼容模式</a>',
-        content,
-        count=1,
-    )
-    content, version_count = re.subn(r"(ver:)[^<\s]+", rf"\g<1>{version}", content, count=1)
-    if (normal_count, polyfill_count, version_count) != (1, 1, 1):
-        raise RuntimeError("index.html 中的模式入口或版本号格式不符合预期")
-
-    meta = f'<meta name="cot-loader-version" content="{loader_name}" />'
-    content, meta_count = re.subn(
-        r'<meta name="cot-loader-version" content="[^"]+"\s*/?>',
-        meta,
-        content,
-        count=1,
-    )
-    if meta_count == 0:
-        content, head_count = re.subn(r"(<head>\s*)", rf"\1    {meta}\n", content, count=1)
-        if head_count != 1:
-            raise RuntimeError("index.html 中未找到 head 标签")
+    meta = f'<meta name="cot-loader-version" content="{loader_name}">'
+    content = re.sub(r'<meta name="cot-loader-version"[^>]*>\s*', '', content)
+    if "<head>" not in content:
+        raise RuntimeError("首页缺少 head")
+    content = content.replace("<head>", "<head>\n" + meta, 1)
     index_path.write_text(content, encoding="utf-8", newline="\n")
 
 
@@ -222,58 +199,79 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     root = Path(__file__).resolve().parent
-    vanilla_dir = root / "vanilla"
-    mods_dir = root / "mods"
-
-    if args.publish and run_git(root, "status", "--porcelain", capture=True):
-        raise RuntimeError("--publish 要求运行前 git 工作区干净")
-
+    manifest = json.loads((root / "upstream-release.json").read_text())
     release = latest_release()
     normal = select_asset(release.assets, NORMAL_RE, "普通版")
-    polyfill = select_asset(release.assets, POLYFILL_RE, "兼容版")
-    image = select_asset(release.assets, IMAGE_RE, "图片包")
-    i18n = select_asset(release.assets, I18N_RE, "汉化包")
-
-    current = current_loader(root / "index.html")
-    if current == normal[0] and not args.force:
-        print(f"当前已是最新版本：{normal[0]}（上游发布 {release.tag}）")
-        return 0
     if args.check:
-        print(f"发现新版本：当前 {current or '无'}，最新 {normal[0]}（上游发布 {release.tag}）")
+        print(f"已适配 {manifest['tag']}；上游最新 {release.tag}。仅检查，不自动覆盖已验证版本。")
         return 0
-
+    if release.tag != manifest["tag"]:
+        raise RuntimeError("上游版本尚未适配；先更新固定清单、验证立绘和旧存档，再发布")
+    if args.publish and run_git(root, "status", "--porcelain", capture=True):
+        raise RuntimeError("--publish 要求工作区干净")
+    if current_loader(root / "index.html") == normal[0] and not args.force:
+        print("当前已经是经过适配的 " + manifest["tag"])
+        return 0
+    targets = {
+        normal[0]: "vanilla/game.html",
+        select_asset(release.assets, POLYFILL_RE, "兼容版")[0]: "vanilla/game-polyfill.html",
+        select_asset(release.assets, IMAGE_RE, "原版图片")[0]: "mods/CoTGameOriginalImagePack.mod.zip",
+        select_asset(release.assets, I18N_RE, "汉化")[0]: "mods/ModI18N.mod.zip",
+    }
+    import hashlib
     with tempfile.TemporaryDirectory(prefix="cot-update-") as temp:
         temp_dir = Path(temp)
-        downloaded = {}
-        for name, url in (normal, polyfill, image, i18n):
-            target = temp_dir / name
-            download(url, target)
-            downloaded[name] = target
-
-        for name, archive in downloaded.items():
-            if not zipfile.is_zipfile(archive):
-                raise RuntimeError(f"下载的附件不是有效 ZIP：{name}")
-        normal_member = html_member(downloaded[normal[0]])
-        polyfill_member = html_member(downloaded[polyfill[0]])
-
-        vanilla_dir.mkdir(exist_ok=True)
-        mods_dir.mkdir(exist_ok=True)
-        extract_html(downloaded[normal[0]], normal_member, vanilla_dir / "index.html")
-        extract_html(downloaded[polyfill[0]], polyfill_member, vanilla_dir / "polyfill.html")
-        remove_itchio_scripts(vanilla_dir / "index.html")
-        remove_itchio_scripts(vanilla_dir / "polyfill.html")
-        shutil.copyfile(downloaded[image[0]], mods_dir / "CoTGameOriginalImagePack.mod.zip")
-        shutil.copyfile(downloaded[i18n[0]], mods_dir / "ModI18N.mod.zip")
-
-    for old_html in vanilla_dir.glob("CoT-ModLoader-*.html"):
-        old_html.unlink()
-    update_index(root / "index.html", normal[0], game_version(normal[0]))
-
-    print(f"已更新至 {normal[0]}（上游发布 {release.tag}）")
+        staged = {}
+        for name, target in targets.items():
+            expected = manifest["assets"][name]
+            if release.assets[name] != expected["url"]:
+                raise RuntimeError("附件地址与已审核清单不符：" + name)
+            archive = temp_dir / name
+            download(expected["url"], archive)
+            if hashlib.sha256(archive.read_bytes()).hexdigest() != expected["sha256"]:
+                raise RuntimeError("附件 SHA-256 校验失败：" + name)
+            with zipfile.ZipFile(archive) as bundle:
+                if bundle.testzip():
+                    raise RuntimeError("ZIP 校验失败：" + name)
+            if target.endswith(".html"):
+                staged[target] = temp_dir / Path(target).name
+                extract_html(archive, html_member(archive), staged[target])
+                remove_itchio_scripts(staged[target])
+                raw = staged[target].read_text()
+                # Keep the original game identity and loader storage keys.
+                for expected_text in [
+                    'name="Course of Temptation"',
+                    'ifid="0614E98D-503D-4EA0-97CC-B400D785FEDF"',
+                    'format-version="2.36.1"',
+                    'CoTmodDataIndexDBZipList',
+                    'CoTmodDataIndexDBZip',
+                ]:
+                    if expected_text not in raw:
+                        raise RuntimeError("存档或模组存储标识变化：" + expected_text)
+                if "0.8.5e" not in raw:
+                    raise RuntimeError("游戏版本不符")
+            else:
+                staged[target] = archive
+        for target, path in staged.items():
+            dest = root / target
+            dest.parent.mkdir(exist_ok=True)
+            shutil.copyfile(path, dest)
+    # Existing game bookmarks now pass through backup + mod refresh before boot.
+    for name, mode in [("index.html", ""), ("polyfill.html", "&mode=polyfill")]:
+        url = "../auto-load.html?build=" + manifest["build"] + mode
+        (root / "vanilla" / name).write_text(
+            '<!doctype html><html lang="zh-CN"><meta charset="UTF-8">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1">'
+            '<title>正在保护旧存档并加载游戏</title>'
+            f'<meta http-equiv="refresh" content="0;url={url}">'
+            f'<a href="{url}">继续进入游戏</a></html>', encoding="utf-8")
+    subprocess.run([sys.executable, "tools/build_npc_portraits.py"], cwd=root, check=True)
+    subprocess.run([sys.executable, "tools/build_text_hotfix.py"], cwd=root, check=True)
+    subprocess.run([sys.executable, "tools/test_text_hotfix.py"], cwd=root, check=True)
+    update_index(root / "index.html", normal[0], manifest["version"])
+    print("已准备 " + manifest["tag"] + "；汉化、原版图片、NPC/主角立绘和短信修复均保留")
     if args.publish:
         publish(root, release.tag)
-    else:
-        print("文件已更新但未提交；确认后可使用 --publish 自动提交并推送")
     return 0
 
 
