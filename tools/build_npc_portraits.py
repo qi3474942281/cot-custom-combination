@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CSS = '''/* Scoped, responsive layers for the current People cards and NPC dialog. */
 .mes-portrait { position:relative; flex-shrink:0; overflow:hidden; aspect-ratio:1; }
 .mes-portrait-large { width:150px; margin:0.5em auto; }
+.mes-portrait-player { width:160px; margin:0.5em auto; }
 .mes-portrait-small { width:60px; float:right; margin:0 0 0.5em 0.5em; }
 .mes-portrait > div { position:absolute; inset:0; }
 .mes-portrait img { position:absolute; inset:0; width:100%; height:100%; max-width:none; display:block; }
@@ -59,7 +60,7 @@ def adapt_snippet(source: str, small: bool) -> str:
     source = source.replace('!"face" in currentClothing.covers', '!currentClothing.covers.includes("face")')
     source = source.replace('_npcbeardlength isnot 0', '_npcbeardlength gt 0')
     source = source.replace('setup.people.get_person(_displaypanel).job',
-                            '(_displaypanel.temporary ? {} : setup.people.get_person(_displaypanel) || {}).job')
+                            '((_displaypanel.is_pc || _displaypanel.temporary) ? {} : setup.people.get_person(_displaypanel) || {}).job')
     # The upstream nipple overlay checks the player's clothes; use the displayed NPC.
     source = source.replace('$pc.underwear_covering("breasts") != $pc.outermost_covering("breasts")', '_displaypanel.underwear_covering("breasts") != _displaypanel.outermost_covering("breasts")')
 
@@ -86,7 +87,7 @@ def build(data: bytes) -> bytes:
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         files = {name: archive.read(name) for name in archive.namelist() if not name.endswith('/')}
     boot = json.loads(files['boot.json'])
-    boot['version'] = '1.0.6.2-cot080h.1'
+    boot['version'] = '1.0.6.2-cot080h.2'
     boot['styleFileList'] = ['modules/containerfornpccomponents.css', 'modules/current-ui.css']
     boot['scriptFileList'] = ['modules/portrait-assets.js']
     boot['additionFile'].append('COMPATIBILITY.md')
@@ -103,9 +104,40 @@ def build(data: bytes) -> bytes:
             passage = re.search(r'<tw-passagedata\b[^>]*name="' + rule['passage'] + r'"[^>]*>(.*?)</tw-passagedata>', raw, re.S)
             if not passage or html.unescape(passage[1]).count(rule['findString']) != 1:
                 raise ValueError(f'Expected exactly one {rule["passage"]} insertion point in {game}')
+
+    # Character is the player's own sheet; DisplayNPC is a different dialog.
+    # Reuse the same art with the real player object, restoring every temporary
+    # variable afterwards so the sidebar cannot affect other game widgets.
+    player = files['game/PersonTab.twee'].decode()
+    player = player.rsplit('\n<div class="npc-display-header">', 1)[0]
+    player = player.replace('<<set _displaypanel to _personobj>>', '<<set _displaypanel to $pc>>')
+    player = player.replace('mes-portrait-large', 'mes-portrait-player')
+    player = player.replace('aria-label="人物立绘"', 'aria-label="主角立绘"')
+    variables = sorted(set(re.findall(r'(?<![\w])_[A-Za-z]\w*', player)) |
+                       {'_' + name for name in re.findall(r'\bT\.([A-Za-z]\w*)', player)} |
+                       {'_temp', '_relwith', '_personobj'})
+    files['game/PlayerPortrait.twee'] = (
+        ':: PlayerPortrait [nobr]\n<<if $pc and $pc.clothes>>\n' +
+        '<<capture ' + ', '.join(variables) + '>>\n' +
+        '<<set _temp to true>><<set _relwith to true>><<set _personobj to $pc>>\n' +
+        player + '\n<</capture>>\n<</if>>\n').encode()
+    boot['tweeFileList'].append('game/PlayerPortrait.twee')
+    player_rules = [
+        ('Character', '<div id="character-dialog" style="width: 38em">', 'game/CharacterInsert.twee'),
+        ('StoryCaption', '<<if _finishedchargen>>\n    <<run setup.Needs.repair()>>', 'game/SidebarInsert.twee'),
+    ]
+    for passage_name, anchor, filename in player_rules:
+        for game in ['index.html', 'polyfill.html']:
+            raw = (ROOT / 'vanilla' / game).read_text()
+            passage = re.search(r'<tw-passagedata\b[^>]*name="' + passage_name + r'"[^>]*>(.*?)</tw-passagedata>', raw, re.S)
+            if not passage or html.unescape(passage[1]).count(anchor) != 1:
+                raise ValueError(f'Expected exactly one {passage_name} insertion point in {game}')
+        files[filename] = (anchor + '\n<<include "PlayerPortrait">>\n').encode()
+        replacements.append({'passage': passage_name, 'findString': anchor,
+                             'replaceFile': filename, 'all': False, 'debug': False})
     files['modules/current-ui.css'] = CSS.encode()
     files['modules/portrait-assets.js'] = ('(() => {\nconst paths = new Set(' + json.dumps(boot['imgFileList'], ensure_ascii=False) + ');\nsetup.MesPortrait = {image(path, fallback) {return paths.has(path) ? path : fallback;}};\n})();\n').encode()
-    files['COMPATIBILITY.md'] = ('# CoT 0.8.0h compatibility\n\nOriginal portraits and artwork: Maenoko / NPC-Visualization-Mod, mobile v1.0.6.2.\n' + SOURCE + '\n\nAdaptation: current DisplayNPC and SocialWidgets insertion points; scoped responsive layers; guards for uncovered upper bodies; fallback art for new clothing/hair missing from the original pack.\nOriginal README and all artwork are retained.\n').encode()
+    files['COMPATIBILITY.md'] = ('# CoT 0.8.0h compatibility\n\nOriginal portraits and artwork: Maenoko / NPC-Visualization-Mod, mobile v1.0.6.2.\n' + SOURCE + '\n\nAdaptation: current DisplayNPC and SocialWidgets insertion points; player portraits in Character and StoryCaption; scoped responsive layers; guards for uncovered upper bodies; fallback art for new clothing/hair missing from the original pack.\nOriginal README and all artwork are retained.\n').encode()
     files['boot.json'] = (json.dumps(boot, ensure_ascii=False, indent=2) + '\n').encode()
     output = io.BytesIO()
     with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED) as archive:

@@ -45,7 +45,7 @@ Actions 对内容进行写入。
 
 ## NPC 人物立绘
 
-已随游戏自动加载 Maenoko 的 [NPC-Visualization-Mod](https://github.com/Maenoko/NPC-Visualization-Mod) 手机版，并为当前 CoT 0.8.0h 的人物界面做兼容处理。立绘显示在“人物”列表和人物详情页，随外观、发型及衣服变化。
+已随游戏自动加载 Maenoko 的 [NPC-Visualization-Mod](https://github.com/Maenoko/NPC-Visualization-Mod) 手机版，并为当前 CoT 0.8.0h 的人物界面做兼容处理。NPC 立绘显示在人物列表和 NPC 详情页；主角立绘显示在创建角色完成后的侧栏，以及主角自己的“人物”面板。立绘随外观、发型及衣服变化。
 
 `mods/NPCVisualization.mod.zip` 保留原作者的图片和 README。兼容包由 `tools/build_npc_portraits.py` 构建；脚本会校验固定上游发行包的 SHA-256，以及标准/兼容模式中的插入位置。重建方式：
 
