@@ -1,0 +1,29 @@
+name: Validate CoT 0.8.5e upgrade
+on:
+  push:
+    branches: ["upgrade/cot-085e"]
+permissions:
+  contents: write
+concurrency:
+  group: cot-085e-validation
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Inspect pinned release and storage identity
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python tools/inspect_upgrade.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: upgrade-inspection
+          path: upgrade-inspection.json
