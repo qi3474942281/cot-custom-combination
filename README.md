@@ -54,3 +54,20 @@ python tools/build_npc_portraits.py
 ```
 
 没有对应图片的新增发型和衣服会使用原图包中的回退图片。
+
+## 汉化文本热修复
+
+`mods/CoTTextHotfix.mod.zip` 只修正汉化里两处 SugarCube 标签笔误，不改关系或需求数值，也不改存档：
+
+- 礼物短信结果 `EventPhoneMailGiftResult`：`<<<dalterneed Romance _romance>>` 改回 `<<dalterneed Romance _romance>>`
+- `EventSmashersShootSuperheroDom4`：`<<</if>>` 改回 `<</if>>`
+
+该包必须排在 `ModI18N.mod.zip` 之后加载。
+自行加载时请把该 zip 放在 `ModI18N.mod.zip` 后面，不要清除网站数据或存档。若使用本仓库的 `auto-load.html`（构建号 `text-hotfix-1`），它会在已有模组列表中插入热修复包并保留你原来安装的其他模组，不会清空存档。
+
+重建与自动检查：
+
+```sh
+python tools/build_text_hotfix.py
+python tools/test_text_hotfix.py
+```

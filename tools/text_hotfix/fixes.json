@@ -1,0 +1,19 @@
+{
+  "description": "Exact Chinese typo replacements only. Do not change need or relationship values, saves, or passage logic.",
+  "fixes": [
+    {
+      "id": "gift-sms-dalterneed",
+      "passage": "EventPhoneMailGiftResult",
+      "from": "<<<dalterneed Romance _romance>>",
+      "to": "<<dalterneed Romance _romance>>",
+      "reason": "ModI18N TypeB translation added an extra '<' before the dalterneed widget."
+    },
+    {
+      "id": "smashers-endif",
+      "passage": "EventSmashersShootSuperheroDom4",
+      "from": "<<</if>>",
+      "to": "<</if>>",
+      "reason": "ModI18N TypeB translation added an extra '<' before the closing if tag."
+    }
+  ]
+}

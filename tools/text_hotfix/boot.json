@@ -1,0 +1,24 @@
+{
+  "name": "CoTTextHotfix",
+  "version": "1.0.0",
+  "styleFileList": [],
+  "scriptFileList_earlyload": [
+    "earlyload.js"
+  ],
+  "scriptFileList_inject_early": [],
+  "scriptFileList_preload": [],
+  "scriptFileList": [],
+  "tweeFileList": [],
+  "imgFileList": [],
+  "additionFile": [
+    "README.md",
+    "fixes.json"
+  ],
+  "addonPlugin": [],
+  "dependenceInfo": [
+    {
+      "modName": "ModLoader",
+      "version": "^2.31.2"
+    }
+  ]
+}
