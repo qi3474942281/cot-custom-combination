@@ -20,6 +20,9 @@ async function autoLoad() {
 
   const dbName = 'ModLoader_IndexDBLoader';
   const storeName = 'ModLoader_IndexDBLoader';
+  // These keys are configured by vanilla/index.html, rather than the loader defaults.
+  const listKey = 'CoTmodDataIndexDBZipList';
+  const zipKeyPrefix = 'CoTmodDataIndexDBZip';
 
   function openDB() {
     return new Promise((resolve, reject) => {
@@ -35,43 +38,44 @@ async function autoLoad() {
     });
   }
 
-  function arrayBufferToBase64(buffer) {
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
-  }
-
+  let db;
   try {
-    const db = await openDB();
-    const list = [];
+    const downloads = [];
     for (const mod of mods) {
       document.getElementById('msg').textContent = `正在下载 ${mod.name}...`;
       const resp = await fetch(mod.url);
-      if (!resp.ok) throw new Error('fetch failed: ' + mod.url);
+      if (!resp.ok) throw new Error(`下载失败（HTTP ${resp.status}）：${mod.url}`);
       const buf = await resp.arrayBuffer();
-      const base64 = arrayBufferToBase64(buf);
-      const key = `modDataIndexDBZip:${mod.name}`;
-      
-      await new Promise((resolve, reject) => {
-        const tx = db.transaction(storeName, 'readwrite');
-        const store = tx.objectStore(storeName);
-        store.put(base64, key);
-        tx.oncomplete = resolve;
-        tx.onerror = () => reject(tx.error);
-      });
-      list.push(mod.name);
+      // Match IndexDBLoader.addMod(): store ZIP bytes without a large base64 conversion.
+      downloads.push({ name: mod.name, bytes: new Uint8Array(buf) });
     }
 
+    db = await openDB();
     await new Promise((resolve, reject) => {
+      // Commit both ZIPs and their list together so a failed download cannot leave
+      // an incomplete installation. Keep any other mods installed by the player.
       const tx = db.transaction(storeName, 'readwrite');
       const store = tx.objectStore(storeName);
-      store.put(JSON.stringify(list), 'modDataIndexDBZipList');
+      const request = store.get(listKey);
+      request.onsuccess = () => {
+        let previous = [];
+        try {
+          const parsed = JSON.parse(request.result || '[]');
+          if (Array.isArray(parsed) && parsed.every(name => typeof name === 'string')) {
+            previous = parsed;
+          }
+        } catch (_) {
+          // A malformed old list must not prevent restoring the bundled mods.
+        }
+        const list = [...new Set([...mods.map(mod => mod.name), ...previous])];
+        for (const mod of downloads) {
+          store.put(mod.bytes, `${zipKeyPrefix}:${mod.name}`);
+        }
+        store.put(JSON.stringify(list), listKey);
+      };
       tx.oncomplete = resolve;
       tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error || new Error('模组保存事务已中止'));
     });
 
     document.getElementById('msg').textContent = '加载完成，正在进入游戏...';
@@ -80,6 +84,8 @@ async function autoLoad() {
     }, 1000);
   } catch (e) {
     document.getElementById('msg').textContent = '加载失败，请截图给我\n' + e.toString();
+  } finally {
+    if (db) db.close();
   }
 }
 autoLoad();
