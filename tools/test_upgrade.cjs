@@ -76,13 +76,16 @@ async function run(browserType, name) {
     await p.unroute('**/modList.json');
     await boot(p,root+'index.html');
     const now=await storyScript(p,`
+      const social=window.modSC2DataManager.getSC2DataInfoAfterPatch()?.passageDataItems?.items?.find(p=>p.name==='SocialWidgets')?.content || '';
       window.__result={
         id:Config.saves.id, version:Config.saves.version, slot:Save.slots.get(0),
         player:Story.has('PlayerPortrait'),
         caption:Story.get('StoryCaption').text.includes('include "PlayerPortrait"'),
         character:Story.get('Character').text.includes('include "PlayerPortrait"'),
         npc:Story.get('DisplayNPC').text.includes('mes-portrait-large'),
-        social:Story.get('SocialWidgets').text.includes('mes-portrait-small'),
+        social:social.includes('mes-portrait-small'),
+        widgetNames:[...social.matchAll(/<<widget\\s+[\"']?([\\w-]+)/g)].map(m=>({name:m[1],registered:!!Macro.get(m[1])})),
+        socialPrefix:social.slice(0,1200),
         captionPrefix:Story.get('StoryCaption').text.slice(0,200),
         npcPrefix:Story.get('DisplayNPC').text.slice(0,200),
         sms:Story.get('EventPhoneMailGiftResult').text.includes('<<<dalterneed'),
@@ -92,7 +95,7 @@ async function run(browserType, name) {
     console.log('NEW GAME CHECK',JSON.stringify({...now,slot:now.slot ? {id:now.slot.id,date:now.slot.date,version:now.slot.version} : null}));
     assert.equal(now.id,old.id);assert(now.slot);assert.equal(now.slot.date,old.slot.date);
     assert(now.player && now.caption && now.character && now.npc);
-    if(!now.social) console.log('SOCIAL SOURCE',await p.evaluate(()=>SugarCube.Story.get('SocialWidgets').text.slice(0,18000)));
+    if(!now.social) console.log('SOCIAL CACHE',now.socialPrefix);
     assert(!now.sms && !now.brokenIf);assert(String(now.version).includes('0.8.5'));
     const backedUp=await p.evaluate(async()=>{
       const s=document.createElement('script');s.src='../save-backup.js';
@@ -110,7 +113,8 @@ async function run(browserType, name) {
     assert(portrait.images>0);assert.deepEqual(portrait.errors,[]);
     await p.waitForFunction(()=>[...document.querySelectorAll('#portrait-test img')].every(i=>i.complete && i.naturalWidth>0),null,{timeout:30000});
     assert.equal(errors.filter(x=>x.includes('An error has occurred')).length,0);
-    assert(now.social,'social portrait source marker missing');
+    assert(now.social,'social portrait cache marker missing');
+    assert(now.widgetNames.length>0 && now.widgetNames.every(w=>w.registered),'compiled social widgets missing');
     results.push({engine:name,test:'0.8.0h save slot visible in 0.8.5e, four mods applied, player portrait images',pass:true,oldId:old.id,newId:now.id,version:now.version});
     await fresh.close();
   } finally {await browser.close();}
