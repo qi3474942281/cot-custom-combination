@@ -9,10 +9,10 @@ import update_upstream as upstream
 ROOT = Path(__file__).resolve().parents[1]
 TAG = "v0.8.5e-1.0.0"
 def attrs(raw):
-    text = re.search(r"<tw-storydata\\b[^>]*>", raw)[0]
-    return dict(re.findall(r'([\\w-]+)="([^"]*)"', text))
+    text = re.search(r"<tw-storydata\b[^>]*>", raw)[0]
+    return dict(re.findall(r'([\w-]+)="([^"]*)"', text))
 def passage(raw, name):
-    m=re.search(r'<tw-passagedata\\b[^>]*name="'+re.escape(name)+r'"[^>]*>(.*?)</tw-passagedata>',raw,re.S)
+    m=re.search(r'<tw-passagedata\b[^>]*name="'+re.escape(name)+r'"[^>]*>(.*?)</tw-passagedata>',raw,re.S)
     return html.unescape(m[1]) if m else ""
 def main():
     release=upstream.latest_release()
@@ -34,7 +34,7 @@ def main():
                 sections+=re.findall(r'<script[^>]*id="twine-user-script"[^>]*>(.*?)</script>',raw,re.S)
                 report[key][label+"_storage"]=[]
                 for section in sections:
-                    for match in re.finditer(r"(?:Config\\.saves|Config\\.history|idb\\.active|CoTmodData|storageId|Story\\.name)", section):
+                    for match in re.finditer(r"(?:Config\.saves|Config\.history|idb\.active|CoTmodData|storageId|Story\.name)", section):
                         report[key][label+"_storage"].append(section[max(0,match.start()-100):match.start()+200])
                 report[key][label+"_loader_keys"]=sorted(set(re.findall(r"CoTmodData[A-Za-z0-9_]+",raw)))
             if key=="normal":
