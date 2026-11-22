@@ -44,7 +44,7 @@ def request(url: str) -> urllib.request.Request:
         "X-GitHub-Api-Version": "2022-11-28",
     }
     token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
-    if token:
+    if token and urllib.parse.urlparse(url).hostname == "api.github.com":
         headers["Authorization"] = f"Bearer {token}"
     return urllib.request.Request(url, headers=headers)
 

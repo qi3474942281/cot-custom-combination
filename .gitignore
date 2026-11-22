@@ -1,2 +1,7 @@
 __pycache__/
 *.py[cod]
+
+.compat-old/
+node_modules/
+package-lock.json
+upgrade-test-results.json

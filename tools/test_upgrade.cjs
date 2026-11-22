@@ -63,9 +63,10 @@ async function run(browserType, name) {
     assert(!page.url().includes('game.html'));
     await context.close();
     const fresh=await browser.newContext({...devices['iPhone 13']});
-    const p=await fresh.newPage(), errors=[];
+    const p=await fresh.newPage(), errors=[], logs=[];
+    p.on('response',r=>{if(r.status()>=400)console.log('HTTP',r.status(),r.url());});
     p.on('dialog',async d=>{errors.push(d.message());await d.dismiss();});
-    p.on('console',m=>{if(m.type()==='error')console.log('GAME ERROR',m.text().slice(0,400));});
+    p.on('console',m=>{if(/TweeReplacer|NPC|portrait|ModI18N|Error|error/.test(m.text())){logs.push(m.text().slice(0,400));console.log('MOD LOG',m.text().slice(0,400));}});
     await p.route('**/modList.json',route=>route.fulfill({contentType:'application/json',body:'[]'}));
     await boot(p,root+'.compat-old/vanilla/index.html');
     const old=await storyScript(p,"idb.active=false; Config.saves.isAllowed=()=>true; window.__result={id:Config.saves.id, saved:Save.slots.save(0),slot:Save.slots.get(0)};");
@@ -81,10 +82,13 @@ async function run(browserType, name) {
         character:Story.get('Character').text.includes('include "PlayerPortrait"'),
         npc:Story.get('DisplayNPC').text.includes('mes-portrait-large'),
         social:Story.get('SocialWidgets').text.includes('mes-portrait-small'),
+        captionPrefix:Story.get('StoryCaption').text.slice(0,200),
+        npcPrefix:Story.get('DisplayNPC').text.slice(0,200),
         sms:Story.get('EventPhoneMailGiftResult').text.includes('<<<dalterneed'),
         brokenIf:Story.get('EventSmashersShootSuperheroDom4').text.includes('<<</if>>')
       };
     `);
+    console.log('NEW GAME CHECK',JSON.stringify(now));
     assert.equal(now.id,old.id);assert(now.slot);assert.equal(now.slot.date,old.slot.date);
     assert(now.player && now.caption && now.character && now.npc && now.social);
     assert(!now.sms && !now.brokenIf);assert(String(now.version).includes('0.8.5'));
