@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>正在加载汉化与图片...</title>
+<style>
+body { background:#111; color:#eee; font-family:sans-serif; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
+#msg { font-size:18px; text-align:center; }
+</style>
+</head>
+<body>
+<div id="msg">正在自动加载汉化与图片包，请稍候...</div>
+<script>
+async function autoLoad() {
+  const mods = [
+    { name: 'ModI18N.mod.zip', url: '/cot-custom-combination/mods/ModI18N.mod.zip' },
+    { name: 'CoTGameOriginalImagePack.mod.zip', url: '/cot-custom-combination/mods/CoTGameOriginalImagePack.mod.zip' }
+  ];
+
+  const dbName = 'ModLoader_IndexDBLoader';
+  const storeName = 'ModLoader_IndexDBLoader';
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(dbName, 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(storeName)) {
+          db.createObjectStore(storeName);
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  try {
+    const db = await openDB();
+    const tx = db.transaction(storeName, 'readwrite');
+    const store = tx.objectStore(storeName);
+
+    const list = [];
+    for (const mod of mods) {
+      document.getElementById('msg').textContent = `正在下载 ${mod.name}...`;
+      const resp = await fetch(mod.url);
+      const buf = await resp.arrayBuffer();
+      const key = `modDataIndexDBZip:${mod.name}`;
+      store.put(new Uint8Array(buf), key);
+      list.push(mod.name);
+    }
+    store.put(JSON.stringify(list), 'modDataIndexDBZipList');
+
+    await new Promise(r => { tx.oncomplete = r; });
+    document.getElementById('msg').textContent = '加载完成，正在进入游戏...';
+    setTimeout(() => {
+      location.href = 'vanilla/index.html';
+    }, 800);
+  } catch (e) {
+    document.getElementById('msg').textContent = '加载失败，请刷新重试\n' + e;
+  }
+}
+autoLoad();
+</script>
+</body>
+</html>
