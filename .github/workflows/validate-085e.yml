@@ -29,11 +29,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Install browser checks
-        run: |
-          npm install --no-save playwright@1.56.1
-          npx playwright install --with-deps chromium webkit
-      - name: Test backup, cached mods, game boot and save recognition
+      - name: Install test library
+        run: npm install --no-save playwright@1.56.1
+      - name: Test Chromium compatibility
+        env:
+          COT_ENGINE: chromium
+          COT_SYSTEM_CHROME: "1"
+        run: node tools/test_upgrade.cjs
+      - name: Install WebKit
+        run: npx playwright install --with-deps webkit
+      - name: Test WebKit compatibility
+        env:
+          COT_ENGINE: webkit
         run: node tools/test_upgrade.cjs
       - name: Commit validated candidate on upgrade branch only
         run: |

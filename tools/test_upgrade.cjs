@@ -4,7 +4,8 @@ const {spawn} = require('node:child_process');
 const path = require('node:path'), fs = require('node:fs');
 const assert = require('node:assert/strict');
 const server = spawn('python', ['-m','http.server','8765','--directory',path.dirname(process.cwd())], {stdio:'ignore'});
-const root='http://127.0.0.1:8765/cot-custom-combination/', results=[];
+const root='http://127.0.0.1:8765/cot-custom-combination/';
+const results=fs.existsSync('upgrade-test-results.json') ? JSON.parse(fs.readFileSync('upgrade-test-results.json')) : [];
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function boot(page,url) {
   await page.goto(url);
@@ -16,7 +17,7 @@ async function storyScript(page,source) {
   return page.evaluate(()=>window.__result);
 }
 async function run(browserType, name) {
-  const browser=await browserType.launch({headless:true});
+  const browser=await browserType.launch({headless:true,...(browserType===chromium && process.env.COT_SYSTEM_CHROME ? {channel:'chrome'} : {})});
   const context=await browser.newContext({...devices['iPhone 13'], acceptDownloads:true});
   const page=await context.newPage();
   try {
@@ -90,7 +91,8 @@ async function run(browserType, name) {
     `);
     console.log('NEW GAME CHECK',JSON.stringify({...now,slot:now.slot ? {id:now.slot.id,date:now.slot.date,version:now.slot.version} : null}));
     assert.equal(now.id,old.id);assert(now.slot);assert.equal(now.slot.date,old.slot.date);
-    assert(now.player && now.caption && now.character && now.npc && now.social);
+    assert(now.player && now.caption && now.character && now.npc);
+    if(!now.social) console.log('SOCIAL SOURCE',await p.evaluate(()=>SugarCube.Story.get('SocialWidgets').text.slice(0,18000)));
     assert(!now.sms && !now.brokenIf);assert(String(now.version).includes('0.8.5'));
     const backedUp=await p.evaluate(async()=>{
       const s=document.createElement('script');s.src='../save-backup.js';
@@ -101,13 +103,14 @@ async function run(browserType, name) {
     const portrait=await storyScript(p,`
       State.variables.people ||= {}; State.variables.niches ||= {}; State.variables.virginity ||= {};
       State.variables.pc=setup.check_revive(JSON.parse(JSON.stringify(setup.store_class(new Person({person:'PC'})))));
-      const host=document.createElement('div');host.id='portrait-test';document.body.appendChild(host);
+      const host=document.createElement('div');host.id='portrait-test';document.querySelector('#passages .passage').appendChild(host);
       new Wikifier(host,'<<include "PlayerPortrait">>');
       window.__result={images:host.querySelectorAll('img').length,errors:[...host.querySelectorAll('.error')].map(n=>n.textContent)};
     `);
     assert(portrait.images>0);assert.deepEqual(portrait.errors,[]);
     await p.waitForFunction(()=>[...document.querySelectorAll('#portrait-test img')].every(i=>i.complete && i.naturalWidth>0),null,{timeout:30000});
     assert.equal(errors.filter(x=>x.includes('An error has occurred')).length,0);
+    assert(now.social,'social portrait source marker missing');
     results.push({engine:name,test:'0.8.0h save slot visible in 0.8.5e, four mods applied, player portrait images',pass:true,oldId:old.id,newId:now.id,version:now.version});
     await fresh.close();
   } finally {await browser.close();}
@@ -115,8 +118,8 @@ async function run(browserType, name) {
 (async()=>{
   try {
     for(let i=0;i<40;i++){try{await fetch(root);break;}catch{await delay(250);}}
-    await run(chromium,'Chromium iPhone profile');
-    await run(webkit,'WebKit iPhone profile');
+    if(process.env.COT_ENGINE!=='webkit') await run(chromium,'Chromium iPhone profile');
+    if(process.env.COT_ENGINE!=='chromium') await run(webkit,'WebKit iPhone profile');
     console.log(JSON.stringify(results,null,2));
   }catch(e){results.push({pass:false,error:e.stack});console.error(e);process.exitCode=1;}
   finally{fs.writeFileSync('upgrade-test-results.json',JSON.stringify(results,null,2));server.kill();}
