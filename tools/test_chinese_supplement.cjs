@@ -64,6 +64,60 @@ async function run(type,engine){
   await p.waitForFunction(()=>document.querySelector('#phrase').textContent==='班克罗夫特套房');
   const display=await p.evaluate(()=>({unit:document.querySelector('#unit').textContent,input:document.querySelector('#untouched-input').value,select:document.querySelector('#untouched-select').value,id:document.querySelector('#untouched-id').getAttribute('data-passage'),kitchen:document.querySelector('#untouched-id').textContent,code:document.querySelector('#untouched-code').textContent}));
   assert.deepEqual(display,{unit:'31 号套房',input:'Bancroft Suites',select:'Bancroft Suites',id:'HousingRoom',kitchen:'厨房',code:'Bancroft Suites'});
+  const shopping=await script(p,`
+   const foodShop=setup.Shops.db['Chonk-o-Choco vending machine'];
+   const original=JSON.stringify(foodShop);
+   State.variables.shop='Chonk-o-Choco vending machine';
+   State.variables.shopsearch='巧克';State.variables.lastshopcategoryindex=0;
+   State.variables.perPage=10;delete State.variables.shopstyles;delete State.variables.shopskills;
+   const host=document.createElement('div');host.id='shopping-test';
+   document.querySelector('#passages .passage').appendChild(host);
+   new Wikifier(host,'<<include "ShopMenu">>');
+   const labels=[...host.querySelectorAll('.shop-item-name')].map(n=>n.textContent.trim());
+   const item=foodShop.items.find(i=>i.type==='food');
+   const product={...item,label:'Chonk-o-Choco'};
+   const before=JSON.stringify(product);
+   const localized=setup.CoTChinese.shopLabel(product);
+   const clothing=Object.values(setup.Shops.db).flatMap(s=>Array.isArray(s?.items)?s.items:[])
+     .find(i=>i.type==='clothes' && /[\\u4e00-\\u9fff]/.test(setup.clothes[i.item]?.cn_name||''));
+   if(!clothing)throw new Error('No clothing catalogue fixture');
+   const legacyClothing={...clothing,label:clothing.item};
+   const legacyData=JSON.stringify(legacyClothing);
+   State.variables.shopitem=legacyClothing;
+   const detail=Story.get('ShopItem').text.match(/<div class="shop-item-name">.*?<\\/div>/s)?.[0];
+   if(!detail)throw new Error('Missing actual item heading template');
+   const heading=document.createElement('div');host.appendChild(heading);new Wikifier(heading,detail);
+   const clothingLabel=heading.textContent;
+   const money=State.variables.pcmoney;
+   const price=setup.Shops.get_price(product.item,product.type)*setup.Shops.price_multiplier(State.variables.shop);
+   const advance=setup.Time.advance_time;
+   let purchase;
+   try {
+     // Isolate world simulation; exercise the game's own item and payment code.
+     setup.Time.advance_time=()=>{};
+     purchase=setup.Shops.maybe_purchase(foodShop,product.type,product.item,{});
+   } finally {setup.Time.advance_time=advance;}
+   window.__result={labels,localized,productUnchanged:before===JSON.stringify(product),
+    catalogUnchanged:original===JSON.stringify(foodShop),price,spent:money-State.variables.pcmoney,
+    item:product.item,purchase,clothingLabel,clothingUnchanged:legacyData===JSON.stringify(legacyClothing),
+    errors:[...host.querySelectorAll('.error')].map(n=>n.textContent),
+    detailPatched:Story.get('ShopItem').text.includes('setup.CoTChinese.shopLabel($shopitem)'),
+    count:setup.CoTChinese.shoppingCount};
+  `);
+  console.log('SHOPPING',JSON.stringify(shopping));
+  assert.deepEqual(shopping.errors,[]);assert(shopping.labels.length>0);
+  assert(shopping.labels.every(s=>/[\u4e00-\u9fff]/.test(s)),'Chinese product search did not render translated labels');
+  assert.equal(shopping.localized,'喵喵巧克宝');assert(shopping.productUnchanged&&shopping.catalogUnchanged);
+  assert(shopping.detailPatched);assert.equal(shopping.item,'chocolate candy bar');
+  assert(/[\u4e00-\u9fff]/.test(shopping.clothingLabel));assert(shopping.clothingUnchanged);
+  assert.equal(shopping.spent,Math.floor(shopping.price));assert(shopping.spent>0);
+  await p.evaluate(()=>{
+   const select=document.createElement('select');select.id='shopping-option';
+   select.innerHTML='<option>No limit</option>';
+   document.querySelector('#passages .passage').appendChild(select);
+  });
+  await p.waitForFunction(()=>document.querySelector('#shopping-option option').label==='不限制');
+  assert.equal(await p.evaluate(()=>document.querySelector('#shopping-option').value),'No limit');
   results.push({engine,pass:true,terms:preserved.terms,rentalErrorBefore:before.errors.length,rentalErrorAfter:after.errors.length,money:after.money,saveId:preserved.id});await context.close();
  }finally{await browser.close();}
 }
