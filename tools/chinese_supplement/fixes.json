@@ -91,7 +91,7 @@
   },
   {
     "passage": "ShopItem",
-    "from": "document.getElementById(\"span-\"+sub).innerText=setup.capitalize_each(opt);",
-    "to": "document.getElementById(\"span-\"+sub).innerText=setup.CoTChinese.shopOption(V.shopitem, sub, opt);"
+    "from": "setup.capitalize_each(opt)",
+    "to": "setup.CoTChinese.shopOption(V.shopitem, sub, opt)"
   }
 ]
