@@ -6,19 +6,40 @@ module.exports=async function(p,script){
   State.variables.lefthouse=['Alpha Xi Alpha','Delta Delta Rho'];State.variables.tradgreeks=false;
   State.variables.latepledgeday=99;State.variables.pchouse='Sigma Omicron Theta';
   State.variables.greekpledge='Zeta Kappa Xi';
+  State.variables.month=5;State.variables.day=20;
+  State.variables.pcsports=[];State.variables.pcquitsports=19;
+  State.variables.sportsteams=Object.fromEntries(Object.keys(setup.School.sports).map(sport=>[sport,{coach:'Test Coach',team:['Test Player']}]));
+  State.variables.firstpracticeday=27;State.variables.classesattended={swimming:12};
+  window.__sportsProgress=JSON.stringify({active:State.variables.pcsports,teams:State.variables.sportsteams,practice:State.variables.firstpracticeday,attendance:State.variables.classesattended});
+  const sportsHost=document.createElement('div');sportsHost.id='sports-cooldown-test';document.querySelector('#passages .passage').appendChild(sportsHost);
+  new Wikifier(sportsHost,Story.get('SportsSignup').text);
+
   State.variables.pcneeds={Rest:12,Relaxation:34,Bladder:56,Food:78,Hygiene:90,Attention:123,Composure:0,Release:234,Arousal:345,Satisfaction:456,Pain:567,Humiliation:678,Drunkenness:789};
   State.variables.passnextbladdercheck=true;State.variables.bladderchecks=4;
   const host=document.createElement('div');host.id='quick-cheats-test';document.querySelector('#passages .passage').appendChild(host);
   new Wikifier(host,Story.get('Cheats').text);
-  window.__result={blocked:!setup.Houses.can_join('Alpha Xi Alpha'),
+  window.__result={sportsBlocked:sportsHost.textContent.includes('你最近才退出了一支队伍'),
+   sportsJoinLinks:sportsHost.querySelectorAll('a[data-passage="SportsSignupConfirm"]').length,
+   sportsErrors:[...sportsHost.querySelectorAll('.error')].map(n=>n.textContent),
+   blocked:!setup.Houses.can_join('Alpha Xi Alpha'),
    links:[...host.querySelectorAll('a')].map(a=>a.textContent.trim()),errors:[...host.querySelectorAll('.error')].map(n=>n.textContent),
    memoryPatched:Story.get('DisplayNPCMemories').text.includes('<<cotromancedays _name>>')};
  `);
  assert.deepEqual(initial.errors,[]);assert(initial.blocked&&initial.memoryPatched);
- assert(initial.links.includes('重置社团冷却时间'));
+ assert(initial.links.includes('重置社团冷却时间'));assert(initial.sportsBlocked);assert.equal(initial.sportsJoinLinks,0);assert.deepEqual(initial.sportsErrors,[]);
  await p.locator('#quick-cheats-test a').filter({hasText:'重置社团冷却时间'}).click();
- const house=await script(p,`window.__result={left:State.variables.lefthouse,allowed:setup.Houses.can_join('Alpha Xi Alpha'),house:State.variables.pchouse,pledge:State.variables.greekpledge,opening:State.variables.latepledgeday};`);
- assert.deepEqual(house,{left:[],allowed:true,house:'Sigma Omicron Theta',pledge:'Zeta Kappa Xi',opening:99});
+ const house=await script(p,`
+  const host=document.querySelector('#sports-cooldown-test');host.replaceChildren();
+  new Wikifier(host,Story.get('SportsSignup').text);
+  window.__result={left:State.variables.lefthouse,allowed:setup.Houses.can_join('Alpha Xi Alpha'),house:State.variables.pchouse,pledge:State.variables.greekpledge,opening:State.variables.latepledgeday,
+   quit:State.variables.pcquitsports??null,sportsBlocked:host.textContent.includes('你最近才退出了一支队伍'),
+   joinLabels:[...host.querySelectorAll('a[data-passage="SportsSignupConfirm"]')].map(n=>n.textContent),
+   progressUnchanged:window.__sportsProgress===JSON.stringify({active:State.variables.pcsports,teams:State.variables.sportsteams,practice:State.variables.firstpracticeday,attendance:State.variables.classesattended}),
+   errors:[...host.querySelectorAll('.error')].map(n=>n.textContent)};
+ `);
+ assert.deepEqual({left:house.left,allowed:house.allowed,house:house.house,pledge:house.pledge,opening:house.opening},{left:[],allowed:true,house:'Sigma Omicron Theta',pledge:'Zeta Kappa Xi',opening:99});
+ assert.equal(house.quit,null);assert.equal(house.sportsBlocked,false);assert.equal(house.joinLabels.length,4);assert(house.joinLabels.every(s=>s.includes('加入')));assert(house.progressUnchanged);assert.deepEqual(house.errors,[]);
+ console.log('SPORTS COOLDOWN PAGE PASS',JSON.stringify({before:{blocked:initial.sportsBlocked,joinLinks:initial.sportsJoinLinks},after:house}));
  await p.locator('#quick-cheats-test a').filter({hasText:'一键重置精神'}).click();
  const needs=await script(p,`window.__result={needs:State.variables.pcneeds,day:State.variables.gameday,bladderCheck:State.variables.bladderchecks??null,status:document.querySelector('#cot-quick-cheats-status').textContent};`);
  for(const key of ['Rest','Relaxation','Bladder','Food','Hygiene'])assert.equal(needs.needs[key],1000,key);
@@ -62,16 +83,16 @@ module.exports=async function(p,script){
   State.variables.people['CoT Legacy']={relationship:'open partner',relationshipChangeDay:5};
   setup.CoTQuickCheats.changeRelationshipDays('CoT Legacy',1);
   const legacy={age:setup.Relationships.relationship_age('CoT Legacy'),start:State.variables.people['CoT Legacy'].relationshipChangeDay};
-  State.variables.cheatsenabled=false;
-  const before=JSON.stringify({needs:State.variables.pcneeds,people:State.variables.people,left:State.variables.lefthouse});
+  State.variables.cheatsenabled=false;State.variables.pcquitsports=19;
+  const before=JSON.stringify({needs:State.variables.pcneeds,people:State.variables.people,left:State.variables.lefthouse,quit:State.variables.pcquitsports});
   const denied=[setup.CoTQuickCheats.resetHouseCooldown(),setup.CoTQuickCheats.restoreBasicNeeds(),setup.CoTQuickCheats.changeRelationshipDays('CoT Test A',1)];
   $('#quick-romance-test').empty().wiki('<<cotromancedays "CoT Test A">>');
-  window.__result={legacy,denied,unchanged:before===JSON.stringify({needs:State.variables.pcneeds,people:State.variables.people,left:State.variables.lefthouse}),
+  window.__result={legacy,denied,unchanged:before===JSON.stringify({needs:State.variables.pcneeds,people:State.variables.people,left:State.variables.lefthouse,quit:State.variables.pcquitsports}),
    buttons:document.querySelectorAll('#quick-romance-test a').length,text:document.querySelector('#quick-romance-test').textContent};
  `);
  assert.deepEqual(off.legacy,{age:16,start:4});assert.deepEqual(off.denied,[false,false,false]);assert(off.unchanged);assert.equal(off.buttons,0);assert(off.text.includes('成为恋人'));
  const saved=await script(p,`
-  State.variables.cheatsenabled=true;
+  State.variables.cheatsenabled=true;setup.CoTQuickCheats.resetHouseCooldown();
   // SugarCube saves passage-history moments. Commit the next moment as a
   // normal passage transition does before testing the persisted slot.
   State.create(State.passage);
@@ -81,7 +102,7 @@ module.exports=async function(p,script){
   const vars=history[slot.state.index].variables;
   window.__result={ok,id:slot.id,start:vars.people['CoT Test A'].partneredday,legacyStart:vars.people['CoT Legacy'].relationshipChangeDay,needs:vars.pcneeds,left:vars.lefthouse,mod:setup.CoTQuickCheats.version};
  `);
- assert.equal(saved.ok,true);assert.equal(saved.id,'course-of-temptation');assert.equal(saved.start,20);assert.equal(saved.legacyStart,4);assert.equal(saved.needs.Rest,1000);assert.deepEqual(saved.left,[]);assert.equal(saved.mod,'1.1.0');
+ assert.equal(saved.ok,true);assert.equal(saved.id,'course-of-temptation');assert.equal(saved.start,20);assert.equal(saved.legacyStart,4);assert.equal(saved.needs.Rest,1000);assert.deepEqual(saved.left,[]);assert.equal(saved.mod,'1.1.1');
  await require('./test_next_conception.cjs')(p,script);
  console.log('QUICK CHEATS PASS',JSON.stringify({house,needs:needs.needs,added,bounds,legacy:off.legacy,save:saved}));
 };

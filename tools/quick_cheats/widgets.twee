@@ -5,9 +5,9 @@
             <strong>快捷重置</strong><br>
             <<link "重置社团冷却时间">>
                 <<run setup.CoTQuickCheats.resetHouseCooldown()>>
-                <<replace "#cot-quick-cheats-status">>已清除退出社团后的重新加入限制。<</replace>>
+                <<replace "#cot-quick-cheats-status">>已清除运动队退队冷却和社团重新加入限制。<</replace>>
             <</link>><br>
-            <span class="small">清除退出记录；重新加入时仍需满足招新和入会条件。</span><br>
+            <span class="small">清除运动队退队的 14 天冷却及希腊社团退出限制；报名开放时间和入会条件仍按原规则。</span><br>
             <<link "一键重置精神、放松、膀胱、饱食、清洁">>
                 <<run setup.CoTQuickCheats.restoreBasicNeeds()>>
                 <<replace "#cot-quick-cheats-status">>精力、放松、膀胱、饱食、清洁已恢复至 100%。<</replace>>

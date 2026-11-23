@@ -7,6 +7,8 @@
     // Leaving a Greek house stores a re-entry blacklist, not a timer.
     // Recruitment dates, active membership and mentor/task data stay intact.
     variables().lefthouse = [];
+    // SportsSignup separately blocks signups for 14 days after leaving a team.
+    delete variables().pcquitsports;
     return true;
   }
   function restoreBasicNeeds() {
@@ -55,5 +57,5 @@
     return originalAge.call(this, person);
   };
   setup.CoTQuickCheats = {enabled, resetHouseCooldown, restoreBasicNeeds,
-    relationshipDays, changeRelationshipDays, version: '1.1.0'};
+    relationshipDays, changeRelationshipDays, version: '1.1.1'};
 })();
