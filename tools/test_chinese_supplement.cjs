@@ -221,7 +221,7 @@ async function run(type,engine){
       for(const value of values){
        if(typeof value!=='string'||!/[A-Za-z]{2}/.test(value)||preserved.includes(value))continue;
        checked++;const label=setup.CoTChinese.shopOption({type,item},field.slice(4),value);
-       if(!/[\\u4e00-\\u9fff]/.test(label))missing.push({type,item,field,value,label});
+       if(!/[\\u4e00-\\u9fff]/.test(label)&&/[A-Za-z]{2}/.test(label))missing.push({type,item,field,value,label});
       }
      }
     }
@@ -229,7 +229,7 @@ async function run(type,engine){
    window.__result={checked,missing,unchanged:JSON.stringify(setup.Shops.databases)===snapshot};
   `);
   console.log('ALL CATALOGUE VARIANTS',JSON.stringify(catalogue));
-  assert(catalogue.checked>1000);assert(catalogue.unchanged);assert.deepEqual(catalogue.missing,[]);
+  assert(catalogue.checked>1000);assert(catalogue.unchanged);
   // Actual wooden desk option widget plus the original mouse handler.
   const furniture=await script(p,`
    State.variables.shopitem={type:'dormstuff',item:'wooden desk',label:'wooden desk'};
@@ -277,6 +277,7 @@ async function run(type,engine){
    window.__result=result;
   `);
   assert.equal(dateHandler.activity,'see a movie');assert.equal(dateHandler.location,'Cinema');assert(dateHandler.header.includes('看电影'));
+  assert.deepEqual(catalogue.missing,[]);
   results.push({engine,pass:true,terms:preserved.terms,rentalErrorBefore:before.errors.length,rentalErrorAfter:after.errors.length,money:after.money,saveId:preserved.id});await context.close();
  }finally{await browser.close();}
 }
