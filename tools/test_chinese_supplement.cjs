@@ -107,8 +107,19 @@ async function run(type,engine){
    const colorNames=colorOptions.map(v=>setup.CoTChinese.shopOption(State.variables.shopitem,'color',v));
    State.temporary.sub_info={color:colorOptions};State.temporary.subs={};
    const optionHost=document.createElement('div');host.appendChild(optionHost);
+   const itemSource=Story.get('ShopItem').text;
+   const escapeAt=itemSource.indexOf('T.htmlEscape = function');
+   const scriptStart=itemSource.lastIndexOf('<<script>>',escapeAt);
+   const scriptEnd=itemSource.indexOf('<</script>>',escapeAt)+11;
+   if(escapeAt<0||scriptStart<0)throw new Error('Missing real ShopItem option initialization');
+   new Wikifier(optionHost,itemSource.slice(scriptStart,scriptEnd));
+   State.temporary.cItem=new ClothingItem('T-shirt');
    new Wikifier(optionHost,'<<shopsubsmenu>>');
    const renderedOptions=[...optionHost.querySelectorAll('.shop-item-option')].map(n=>({text:n.textContent,handler:n.getAttribute('onmousedown')}));
+   const firstOption=optionHost.querySelector('.shop-item-option');
+   if(firstOption)State.temporary.button_clicked_fn('color','black',firstOption,true);
+   const selectedValue=State.temporary.subs.color;
+   const selectedCaption=optionHost.querySelector('#span-color')?.textContent;
    const money=State.variables.pcmoney;
    const price=setup.Shops.get_price(product.item,product.type)*setup.Shops.price_multiplier(State.variables.shop);
    const advance=setup.Time.advance_time;
@@ -120,7 +131,7 @@ async function run(type,engine){
    } finally {setup.Time.advance_time=advance;}
    window.__result={labels,localized,productUnchanged:before===JSON.stringify(product),
     catalogUnchanged:original===JSON.stringify(foodShop),price,spent:money-State.variables.pcmoney,
-    item:product.item,purchase,clothingLabel,detailedLabels,colorNames,renderedOptions,clothingUnchanged:legacyData===JSON.stringify(legacyClothing),
+    item:product.item,purchase,clothingLabel,detailedLabels,colorNames,renderedOptions,selectedValue,selectedCaption,clothingUnchanged:legacyData===JSON.stringify(legacyClothing),
     errors:[...host.querySelectorAll('.error')].map(n=>n.textContent),
     detailPatched:Story.get('ShopItem').text.includes('setup.CoTChinese.shopLabel($shopitem)'),
     count:setup.CoTChinese.shoppingCount};
@@ -134,6 +145,7 @@ async function run(type,engine){
   assert(shopping.colorNames.every(s=>/[\u4e00-\u9fff]/.test(s)));
   assert(shopping.renderedOptions.length===2);assert(shopping.renderedOptions.every(o=>/[\u4e00-\u9fff]/.test(o.text)));
   assert(shopping.renderedOptions[0].handler.includes('black'));
+  assert.equal(shopping.selectedValue,'black');assert(/[\u4e00-\u9fff]/.test(shopping.selectedCaption));
   assert(shopping.detailedLabels.length>0);assert(shopping.detailedLabels.every(s=>/[\u4e00-\u9fff]/.test(s)));
   assert.equal(shopping.spent,Math.floor(shopping.price));assert(shopping.spent>0);
   await p.evaluate(()=>{
