@@ -29,7 +29,21 @@
     const name = info?.cn_name;
     return typeof name === 'string' && /[\u4e00-\u9fff]/.test(name) && !name.includes('%') ? name : label;
   }
-  setup.CoTChinese = {text, unitLabel, shopText, shopLabel, version: '1.1.0',
+  function shopOption(item, sub, value) {
+    const info = setup.Shops?.databases?.[item?.type]?.[item?.item];
+    const values = info?.['sub ' + sub];
+    const names = info?.[sub + '_cn_name'];
+    const index = Array.isArray(values) ? values.indexOf(value) : -1;
+    if (index >= 0 && Array.isArray(names) && names[index]) return names[index];
+    for (const key of ['clothes_standard_cloth_colors', 'clothes_advanced_cloth_colors',
+      'clothes_standard_denim_colors', 'clothes_standard_leather_colors', 'clothes_neon_colors',
+      'standard_furniture_colors', 'standard_furniture_leather_colors']) {
+      const i = setup[key]?.indexOf(value) ?? -1;
+      if (i >= 0 && setup[key + '_cn_name']?.[i]) return setup[key + '_cn_name'][i];
+    }
+    return shopText(typeof value === 'string' ? setup.capitalize_each(value) : value);
+  }
+  setup.CoTChinese = {text, unitLabel, shopText, shopLabel, shopOption, version: '1.1.0',
     termCount: Object.keys(terms).length, shoppingCount: Object.keys(shopping).length};
 
   // Only presentation data: keep housing keys, room IDs and save variables intact.

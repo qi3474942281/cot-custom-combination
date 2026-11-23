@@ -102,6 +102,13 @@ async function run(type,engine){
    new Wikifier(detailList,'<<include "ShopMenu">>');
    const detailedLabels=[...detailList.querySelectorAll('.shop-item-name')].map(n=>n.textContent.trim());
    State.variables.shop='Chonk-o-Choco vending machine';
+   State.variables.shopitem={type:'clothes',item:'T-shirt',label:'T-shirt'};
+   const colorOptions=['black','white'];
+   const colorNames=colorOptions.map(v=>setup.CoTChinese.shopOption(State.variables.shopitem,'color',v));
+   State.temporary.sub_info={color:colorOptions};State.temporary.subs={};
+   const optionHost=document.createElement('div');host.appendChild(optionHost);
+   new Wikifier(optionHost,'<<shopsubsmenu>>');
+   const renderedOptions=[...optionHost.querySelectorAll('.shop-item-option')].map(n=>({text:n.textContent,handler:n.getAttribute('onmousedown')}));
    const money=State.variables.pcmoney;
    const price=setup.Shops.get_price(product.item,product.type)*setup.Shops.price_multiplier(State.variables.shop);
    const advance=setup.Time.advance_time;
@@ -113,7 +120,7 @@ async function run(type,engine){
    } finally {setup.Time.advance_time=advance;}
    window.__result={labels,localized,productUnchanged:before===JSON.stringify(product),
     catalogUnchanged:original===JSON.stringify(foodShop),price,spent:money-State.variables.pcmoney,
-    item:product.item,purchase,clothingLabel,detailedLabels,clothingUnchanged:legacyData===JSON.stringify(legacyClothing),
+    item:product.item,purchase,clothingLabel,detailedLabels,colorNames,renderedOptions,clothingUnchanged:legacyData===JSON.stringify(legacyClothing),
     errors:[...host.querySelectorAll('.error')].map(n=>n.textContent),
     detailPatched:Story.get('ShopItem').text.includes('setup.CoTChinese.shopLabel($shopitem)'),
     count:setup.CoTChinese.shoppingCount};
@@ -124,6 +131,9 @@ async function run(type,engine){
   assert.equal(shopping.localized,'喵喵巧克宝');assert(shopping.productUnchanged&&shopping.catalogUnchanged);
   assert(shopping.detailPatched);assert.equal(shopping.item,'chocolate candy bar');
   assert(/[\u4e00-\u9fff]/.test(shopping.clothingLabel));assert(shopping.clothingUnchanged);
+  assert(shopping.colorNames.every(s=>/[\u4e00-\u9fff]/.test(s)));
+  assert(shopping.renderedOptions.length===2);assert(shopping.renderedOptions.every(o=>/[\u4e00-\u9fff]/.test(o.text)));
+  assert(shopping.renderedOptions[0].handler.includes('black'));
   assert(shopping.detailedLabels.length>0);assert(shopping.detailedLabels.every(s=>/[\u4e00-\u9fff]/.test(s)));
   assert.equal(shopping.spent,Math.floor(shopping.price));assert(shopping.spent>0);
   await p.evaluate(()=>{

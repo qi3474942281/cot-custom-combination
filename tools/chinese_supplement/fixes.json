@@ -83,5 +83,15 @@
     "passage": "SimpleShopMenu",
     "from": "<<= _shopitem.label>>",
     "to": "<<= setup.CoTChinese.shopText(_shopitem.label)>>"
+  },
+  {
+    "passage": "ShopWidgets",
+    "from": "setup.capitalize_each(_sub_opt)",
+    "to": "setup.CoTChinese.shopOption($shopitem, _sub_name, _sub_opt)"
+  },
+  {
+    "passage": "ShopItem",
+    "from": "document.getElementById(\"span-\"+sub).innerText=setup.capitalize_each(opt);",
+    "to": "document.getElementById(\"span-\"+sub).innerText=setup.CoTChinese.shopOption(V.shopitem, sub, opt);"
   }
 ]
