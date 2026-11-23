@@ -1,0 +1,57 @@
+:: CoTQuickCheatWidgets [widget nobr]
+<<widget "cotquickcheats">>
+    <<if $cheatsenabled>>
+        <div class="cot-quick-cheats">
+            <strong>快捷重置</strong><br>
+            <<link "重置社团冷却时间">>
+                <<run setup.CoTQuickCheats.resetHouseCooldown()>>
+                <<replace "#cot-quick-cheats-status">>已清除退出社团后的重新加入限制。<</replace>>
+            <</link>><br>
+            <span class="small">清除退出记录；重新加入时仍需满足招新和入会条件。</span><br>
+            <<link "一键重置精神、放松、膀胱、饱食、清洁">>
+                <<run setup.CoTQuickCheats.restoreBasicNeeds()>>
+                <<replace "#cot-quick-cheats-status">>精力、放松、膀胱、饱食、清洁已恢复至 100%。<</replace>>
+            <</link>>
+            <div id="cot-quick-cheats-status" role="status" aria-live="polite"></div>
+        </div>
+    <</if>>
+<</widget>>
+
+<<widget "cotromancedays">>
+    <<capture _cotRomanceTarget>>
+        <<set _cotRomanceTarget to setup.people.get_name(_args[0])>>
+        <<if setup.CoTQuickCheats.relationshipDays(_cotRomanceTarget) isnot null>>
+            <div id="cot-romance-days" class="npc-display-memories-item cot-romance-days">
+                <<cotromancedayscontent _cotRomanceTarget>>
+            </div>
+        <</if>>
+    <</capture>>
+<</widget>>
+
+<<widget "cotromancedayscontent">>
+    <<capture _cotRomanceTarget, _cotRomanceDays>>
+        <<set _cotRomanceTarget to setup.people.get_name(_args[0])>>
+        <<set _cotRomanceDays to setup.CoTQuickCheats.relationshipDays(_cotRomanceTarget)>>
+        <<if _cotRomanceDays isnot null>>
+            <span>成为恋人：<strong class="cot-romance-count"><<= _cotRomanceDays>></strong> 天</span>
+            <<if $cheatsenabled>>
+                <span class="cot-romance-controls">
+                    <span title="恋爱天数减少 1 天">
+                        <<if _cotRomanceDays gt 0>>
+                            <<link "−">>
+                                <<run setup.CoTQuickCheats.changeRelationshipDays(_cotRomanceTarget, -1)>>
+                                <<replace "#cot-romance-days">><<cotromancedayscontent _cotRomanceTarget>><</replace>>
+                            <</link>>
+                        <<else>><span aria-disabled="true">−</span><</if>>
+                    </span>
+                    <span title="恋爱天数增加 1 天">
+                        <<link "+">>
+                            <<run setup.CoTQuickCheats.changeRelationshipDays(_cotRomanceTarget, 1)>>
+                            <<replace "#cot-romance-days">><<cotromancedayscontent _cotRomanceTarget>><</replace>>
+                        <</link>>
+                    </span>
+                </span>
+            <</if>>
+        <</if>>
+    <</capture>>
+<</widget>>

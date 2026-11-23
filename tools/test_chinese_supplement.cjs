@@ -278,6 +278,7 @@ async function run(type,engine){
   `);
   assert.equal(dateHandler.activity,'see a movie');assert.equal(dateHandler.location,'Cinema');assert(dateHandler.header.includes('看电影'));
   assert.deepEqual(catalogue.missing,[]);
+  await require('./test_quick_cheats.cjs')(p,script);
   results.push({engine,pass:true,terms:preserved.terms,rentalErrorBefore:before.errors.length,rentalErrorAfter:after.errors.length,money:after.money,saveId:preserved.id});await context.close();
  }finally{await browser.close();}
 }
