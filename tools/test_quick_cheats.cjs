@@ -18,7 +18,7 @@ module.exports=async function(p,script){
   State.variables.passnextbladdercheck=true;State.variables.bladderchecks=4;
   const host=document.createElement('div');host.id='quick-cheats-test';document.querySelector('#passages .passage').appendChild(host);
   new Wikifier(host,Story.get('Cheats').text);
-  window.__result={sportsBlocked:sportsHost.textContent.includes('你最近才退出了一支队伍'),
+  window.__result={availableSports:Object.keys(setup.School.sports).length,sportsBlocked:sportsHost.textContent.includes('你最近才退出了一支队伍'),
    sportsJoinLinks:sportsHost.querySelectorAll('a[data-passage="SportsSignupConfirm"]').length,
    sportsErrors:[...sportsHost.querySelectorAll('.error')].map(n=>n.textContent),
    blocked:!setup.Houses.can_join('Alpha Xi Alpha'),
@@ -38,7 +38,7 @@ module.exports=async function(p,script){
    errors:[...host.querySelectorAll('.error')].map(n=>n.textContent)};
  `);
  assert.deepEqual({left:house.left,allowed:house.allowed,house:house.house,pledge:house.pledge,opening:house.opening},{left:[],allowed:true,house:'Sigma Omicron Theta',pledge:'Zeta Kappa Xi',opening:99});
- assert.equal(house.quit,null);assert.equal(house.sportsBlocked,false);assert.equal(house.joinLabels.length,4);assert(house.joinLabels.every(s=>s.includes('加入')));assert(house.progressUnchanged);assert.deepEqual(house.errors,[]);
+ assert.equal(house.quit,null);assert.equal(house.sportsBlocked,false);assert.equal(house.joinLabels.length,initial.availableSports);assert(house.joinLabels.every(s=>s.includes('加入')));assert(house.progressUnchanged);assert.deepEqual(house.errors,[]);
  console.log('SPORTS COOLDOWN PAGE PASS',JSON.stringify({before:{blocked:initial.sportsBlocked,joinLinks:initial.sportsJoinLinks},after:house}));
  await p.locator('#quick-cheats-test a').filter({hasText:'一键重置精神'}).click();
  const needs=await script(p,`window.__result={needs:State.variables.pcneeds,day:State.variables.gameday,bladderCheck:State.variables.bladderchecks??null,status:document.querySelector('#cot-quick-cheats-status').textContent};`);
