@@ -81,6 +81,7 @@ module.exports=async function(p,script){
   const vars=history[slot.state.index].variables;
   window.__result={ok,id:slot.id,start:vars.people['CoT Test A'].partneredday,legacyStart:vars.people['CoT Legacy'].relationshipChangeDay,needs:vars.pcneeds,left:vars.lefthouse,mod:setup.CoTQuickCheats.version};
  `);
- assert.equal(saved.ok,true);assert.equal(saved.id,'course-of-temptation');assert.equal(saved.start,20);assert.equal(saved.legacyStart,4);assert.equal(saved.needs.Rest,1000);assert.deepEqual(saved.left,[]);assert.equal(saved.mod,'1.0.0');
+ assert.equal(saved.ok,true);assert.equal(saved.id,'course-of-temptation');assert.equal(saved.start,20);assert.equal(saved.legacyStart,4);assert.equal(saved.needs.Rest,1000);assert.deepEqual(saved.left,[]);assert.equal(saved.mod,'1.1.0');
+ await require('./test_next_conception.cjs')(p,script);
  console.log('QUICK CHEATS PASS',JSON.stringify({house,needs:needs.needs,added,bounds,legacy:off.legacy,save:saved}));
 };

@@ -55,5 +55,5 @@
     return originalAge.call(this, person);
   };
   setup.CoTQuickCheats = {enabled, resetHouseCooldown, restoreBasicNeeds,
-    relationshipDays, changeRelationshipDays, version: '1.0.0'};
+    relationshipDays, changeRelationshipDays, version: '1.1.0'};
 })();
