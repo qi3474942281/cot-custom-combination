@@ -73,5 +73,15 @@
     "passage": "ShopWidgets",
     "from": "<<= setup.dormstuff[_shopitem.item].description>>",
     "to": "<<= setup.CoTChinese.shopText(setup.dormstuff[_shopitem.item].description)>>"
+  },
+  {
+    "passage": "SimpleShopMenu",
+    "from": "<<link _shopitem.label ",
+    "to": "<<link `setup.CoTChinese.shopLabel(_shopitem)` "
+  },
+  {
+    "passage": "SimpleShopMenu",
+    "from": "<<= _shopitem.label>>",
+    "to": "<<= setup.CoTChinese.shopText(_shopitem.label)>>"
   }
 ]

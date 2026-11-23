@@ -73,7 +73,7 @@ async function run(type,engine){
    const host=document.createElement('div');host.id='shopping-test';
    document.querySelector('#passages .passage').appendChild(host);
    new Wikifier(host,'<<include "ShopMenu">>');
-   const labels=[...host.querySelectorAll('.shop-item-name')].map(n=>n.textContent.trim());
+   const labels=[...host.querySelectorAll('a[data-passage="ShopMenu"]')].map(n=>n.textContent.trim());
    const item=foodShop.items.find(i=>i.type==='food');
    const product={...item,label:'Chonk-o-Choco'};
    const before=JSON.stringify(product);
@@ -88,6 +88,20 @@ async function run(type,engine){
    if(!detail)throw new Error('Missing actual item heading template');
    const heading=document.createElement('div');host.appendChild(heading);new Wikifier(heading,detail);
    const clothingLabel=heading.textContent;
+   const clothingStore=Object.entries(setup.Shops.db).find(([key,s])=>s?.detailed&&Array.isArray(s.items)&&s.items.some(i=>i.type==='clothes'&&!i.checkvar));
+   if(!clothingStore)throw new Error('No detailed clothing shop fixture');
+   const [storeKey,store]=clothingStore;
+   const categories=setup.Shops.parse_categories(store.items);
+   const categoryIndex=categories.findIndex(c=>c.items.some(i=>i.type==='clothes'&&!i.checkvar));
+   const target=categories[categoryIndex].items.find(i=>i.type==='clothes'&&!i.checkvar);
+   State.variables.shop=storeKey;State.variables.lastshop=storeKey;
+   State.variables.lastshopcategoryindex=categoryIndex;
+   State.variables.shopsearch=setup.CoTChinese.shopLabel(target);
+   State.variables.showstyles=false;
+   const detailList=document.createElement('div');host.appendChild(detailList);
+   new Wikifier(detailList,'<<include "ShopMenu">>');
+   const detailedLabels=[...detailList.querySelectorAll('.shop-item-name')].map(n=>n.textContent.trim());
+   State.variables.shop='Chonk-o-Choco vending machine';
    const money=State.variables.pcmoney;
    const price=setup.Shops.get_price(product.item,product.type)*setup.Shops.price_multiplier(State.variables.shop);
    const advance=setup.Time.advance_time;
@@ -99,7 +113,7 @@ async function run(type,engine){
    } finally {setup.Time.advance_time=advance;}
    window.__result={labels,localized,productUnchanged:before===JSON.stringify(product),
     catalogUnchanged:original===JSON.stringify(foodShop),price,spent:money-State.variables.pcmoney,
-    item:product.item,purchase,clothingLabel,clothingUnchanged:legacyData===JSON.stringify(legacyClothing),
+    item:product.item,purchase,clothingLabel,detailedLabels,clothingUnchanged:legacyData===JSON.stringify(legacyClothing),
     errors:[...host.querySelectorAll('.error')].map(n=>n.textContent),
     detailPatched:Story.get('ShopItem').text.includes('setup.CoTChinese.shopLabel($shopitem)'),
     count:setup.CoTChinese.shoppingCount};
@@ -110,6 +124,7 @@ async function run(type,engine){
   assert.equal(shopping.localized,'喵喵巧克宝');assert(shopping.productUnchanged&&shopping.catalogUnchanged);
   assert(shopping.detailPatched);assert.equal(shopping.item,'chocolate candy bar');
   assert(/[\u4e00-\u9fff]/.test(shopping.clothingLabel));assert(shopping.clothingUnchanged);
+  assert(shopping.detailedLabels.length>0);assert(shopping.detailedLabels.every(s=>/[\u4e00-\u9fff]/.test(s)));
   assert.equal(shopping.spent,Math.floor(shopping.price));assert(shopping.spent>0);
   await p.evaluate(()=>{
    const select=document.createElement('select');select.id='shopping-option';
