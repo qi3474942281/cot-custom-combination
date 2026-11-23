@@ -8,7 +8,7 @@
   // with metadata translations: a color or item key may also be a person's name.
   const normalize = value => value.trim().replace(/\s+/g, ' ').toLowerCase();
   const captions = new Map();
-  for (const dictionary of [metadata, shopping, ui.labels, ui.activities]) {
+  for (const dictionary of [metadata, terms, shopping, ui.labels, ui.activities]) {
     for (const [source, label] of Object.entries(dictionary)) captions.set(normalize(source), label);
   }
   const exact = value => typeof value === 'string' ? captions.get(normalize(value)) : undefined;
