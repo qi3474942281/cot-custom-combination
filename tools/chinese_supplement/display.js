@@ -1,6 +1,7 @@
 (() => {
   const terms = /* TERMS */;
   const shopping = /* SHOPPING */;
+  const stylist = /* STYLIST */;
   const escape = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const pattern = new RegExp('(^|[^A-Za-z0-9_])(' + Object.keys(terms)
     .sort((a, b) => b.length - a.length).map(escape).join('|') + ')(?=$|[^A-Za-z0-9_])', 'g');
@@ -43,7 +44,25 @@
     }
     return shopText(typeof value === 'string' ? setup.capitalize_each(value) : value);
   }
-  setup.CoTChinese = {text, unitLabel, shopText, shopLabel, shopOption, version: '1.1.0',
+  function styleLabel(value) {
+    if (typeof value !== 'string') return value;
+    const key = value.toLowerCase();
+    return stylist.styles[key] || setup.styles_cn_name?.[key] || shopText(value);
+  }
+  function styleOptions(values) {
+    return new Map(values.map(value => [styleLabel(value), value]));
+  }
+  function paletteLabel(key) { return stylist.palettes[key] || shopText(key); }
+  function colorLabel(value) { return stylist.colors[value] || shopOption(null, 'color', value); }
+  function garmentLabel(item) {
+    return shopLabel({...item, type: 'clothes', item: item.item || item.archetype});
+  }
+  function garmentStyleLabel(item) {
+    const label = shopOption({...item, type: 'clothes'}, 'style', item.style);
+    return /[\u4e00-\u9fff]/.test(label || '') ? label : styleLabel(item.style);
+  }
+  setup.CoTChinese = {text, unitLabel, shopText, shopLabel, shopOption,
+    styleLabel, styleOptions, paletteLabel, colorLabel, garmentLabel, garmentStyleLabel, version: '1.2.0',
     termCount: Object.keys(terms).length, shoppingCount: Object.keys(shopping).length};
 
   // Only presentation data: keep housing keys, room IDs and save variables intact.
@@ -82,12 +101,18 @@
   function walk(root) {
     if (root.nodeType === Node.TEXT_NODE) { translateNode(root); return; }
     if (root.nodeType !== Node.ELEMENT_NODE) return;
-    // option.label changes the visible caption without changing implicit values.
+    // iOS native pickers must also receive translated textContent. Freeze the
+    // original implicit value before changing either visible caption.
     const options = root.matches('option') ? [root] : root.querySelectorAll('option');
     for (const option of options) {
       if (!option.closest(roots)) continue;
-      const label = shopText(option.label);
-      if (label !== option.label) option.label = label;
+      const label = styleLabel(shopText(option.label));
+      if (label !== option.label || (/[\u4e00-\u9fff]/.test(label) && /[A-Za-z]/.test(option.textContent))) {
+        const value = option.value;
+        option.value = value;
+        option.label = label;
+        option.textContent = label;
+      }
     }
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     let node;
