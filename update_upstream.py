@@ -267,6 +267,7 @@ def main() -> int:
             f'<a href="{url}">继续进入游戏</a></html>', encoding="utf-8")
     subprocess.run([sys.executable, "tools/build_npc_portraits.py"], cwd=root, check=True)
     subprocess.run([sys.executable, "tools/build_text_hotfix.py"], cwd=root, check=True)
+    subprocess.run([sys.executable, "tools/build_chinese_supplement.py"], cwd=root, check=True)
     subprocess.run([sys.executable, "tools/test_text_hotfix.py"], cwd=root, check=True)
     update_index(root / "index.html", normal[0], manifest["version"])
     print("已准备 " + manifest["tag"] + "；汉化、原版图片、NPC/主角立绘和短信修复均保留")

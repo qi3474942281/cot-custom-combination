@@ -1,0 +1,17 @@
+[
+  {
+    "passage": "HousingRentNew",
+    "from": "<<= setup.Housing.get_room_label(V.pchousing[_hkey].plan, V.pchousing[_hkey].rooms[0]) || _hkey>>",
+    "to": "<<= setup.CoTChinese.unitLabel(_hkey)>>"
+  },
+  {
+    "passage": "HousingRentNew",
+    "from": "<<= (setup.Housing.buildings[$housingbuilding] && setup.Housing.buildings[$housingbuilding].cn_name) || $housingbuilding>>",
+    "to": "<<= setup.CoTChinese.text($housingbuilding)>>"
+  },
+  {
+    "passage": "HousingRoom",
+    "from": "setup.and(setup.render_names(_owners), \"no one\")",
+    "to": "setup.and(setup.render_names(_owners), \"无人\")"
+  }
+]

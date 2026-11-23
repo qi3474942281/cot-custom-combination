@@ -159,7 +159,8 @@ def assert_zip_and_load_order():
     if names.index('CoTTextHotfix.mod.zip') != names.index('ModI18N.mod.zip') + 1:
         raise Fail('auto-load.html must download CoTTextHotfix after ModI18N')
     index = (ROOT / 'index.html').read_text(encoding='utf-8')
-    if 'build=cot-085e-1' not in index or "build = 'cot-085e-1'" not in auto:
+    build = json.loads((ROOT / 'upstream-release.json').read_text())['build']
+    if f'build={build}' not in index or f"build = '{build}'" not in auto:
         raise Fail('index.html / auto-load.html must use build=cot-085e-1 to pick up the new pack')
 
 

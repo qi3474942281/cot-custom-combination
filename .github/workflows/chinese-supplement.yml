@@ -1,0 +1,39 @@
+name: Validate Chinese supplement
+on:
+  push:
+    branches: ["improve/chinese-085e"]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check rebuild and existing hotfix
+        run: |
+          python tools/build_chinese_supplement.py
+          git diff --exit-code -- mods/CoTChineseSupplement.mod.zip
+          python tools/test_text_hotfix.py
+          npm install --no-save playwright@1.56.1
+      - name: Test actual rental and display in Chromium
+        env:
+          COT_ENGINE: chromium
+        run: node tools/test_chinese_supplement.cjs
+      - name: Install WebKit
+        run: npx playwright install --with-deps webkit
+      - name: Test actual rental and display in WebKit
+        env:
+          COT_ENGINE: webkit
+        run: node tools/test_chinese_supplement.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chinese-test-results
+          path: chinese-test-results.json

@@ -29,8 +29,9 @@ iPhone 上游戏沿用 localStorage 存档；此备份不包含桌面版可能�
 
 1. `ModI18N.mod.zip`：0.8.5e 官方汉化包。
 2. `CoTTextHotfix.mod.zip`：礼物短信及另一处 SugarCube 标签笔误修复，上游已修复时不重复改动。
-3. `CoTGameOriginalImagePack.mod.zip`：0.8.5e 原版图片包。
-4. `NPCVisualization.mod.zip`：适配当前界面的 NPC 和主角立绘。
+3. `CoTChineseSupplement.mod.zip`：动态地点、住房、房间和常用界面译名补充及租房显示修复。
+4. `CoTGameOriginalImagePack.mod.zip`：0.8.5e 原版图片包。
+5. `NPCVisualization.mod.zip`：适配当前界面的 NPC 和主角立绘。
 
 [Maenoko 的立绘原作](https://github.com/Maenoko/NPC-Visualization-Mod)手机版图片及 README 均保留。
 适配包在 NPC 列表、NPC 详情、主角面板和创建角色后的侧栏显示分层静态立绘；
@@ -57,3 +58,9 @@ node tools/test_upgrade.cjs
 `--publish` 可提交并推送已固定版本；未审核的新版本会被拒绝。
 立绘包可用 `python tools/build_npc_portraits.py` 重建，
 文本修复可用 `python tools/build_text_hotfix.py` 重建。
+
+## 界面汉化补充（1.0.0）
+
+新增 `CoTChineseSupplement.mod.zip`，提供 244 个地点、住房、房间和常用界面译名，地图与房间类型译名沿用原汉化。按显示文本匹配，不改住房键、房间 ID、商品键、存档数据或输入/下拉框的值。补充房间名称显示，并修复租房成功提示在住房外调用房间标签导致的报错。保留原汉化、短信修复、图片与立绘。
+
+构建：`python tools/build_chinese_supplement.py`。浏览器回归：`node tools/test_chinese_supplement.cjs`；在隔离配置中重现原租房报错，再检查补丁后的租房扣款、住房登记、房间编号、中文显示、存档标识和输入框值不变。此补充包不代表全部剧情已逐句校对。
