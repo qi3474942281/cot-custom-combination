@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 SOURCE=ROOT/'tools/quick_cheats'
 def build():
-    boot={'name':'CoTQuickCheats','version':'1.1.1','scriptFileList_earlyload':['earlyload.js'],
+    boot={'name':'CoTQuickCheats','version':'1.2.0','scriptFileList_earlyload':['earlyload.js'],
           'scriptFileList':['quick-cheats.js','next-conception.js'],'styleFileList':['quick-cheats.css'],
           'tweeFileList':['widgets.twee'],'imgFileList':[],
           'dependenceInfo':[{'modName':'ModLoader','version':'^2.31.2'},

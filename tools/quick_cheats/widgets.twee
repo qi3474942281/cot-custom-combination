@@ -66,17 +66,18 @@
 <<widget "cotnextconceptioncontent">>
     <<if $cheatsenabled>>
         <<if setup.CoTQuickCheats.conceptionPending()>>
-            <strong role="status">下一次受孕保证：已开启（待触发）</strong><br>
+            <strong role="status"><<= setup.CoTQuickCheats.conceptionStatusText()>></strong><br>
             <<link "取消下一次受孕保证">>
                 <<run setup.CoTQuickCheats.setConceptionPending(false)>>
                 <<replace "#cot-next-conception">><<cotnextconceptioncontent>><</replace>>
             <</link>>
         <<else>>
+            <span role="status"><<= setup.CoTQuickCheats.conceptionStatusText()>></span><br>
             <<link "下一次性爱受孕几率100%">>
                 <<run setup.CoTQuickCheats.setConceptionPending(true)>>
                 <<replace "#cot-next-conception">><<cotnextconceptioncontent>><</replace>>
             <</link>>
         <</if>><br>
-        <span class="small">对玩家参与的下一次有效受孕判定生效，覆盖周期及避孕概率，成功后自动关闭。需开启怀孕内容；已怀孕或未触发受孕判定时保留次数。</span>
+        <span class="small">对玩家参与、记录了可受孕行为的下一次互动生效，最晚在互动结束时结算；覆盖周期及避孕概率，成功后自动关闭，未触发时显示原因。需开启怀孕内容。</span>
     <</if>>
 <</widget>>
