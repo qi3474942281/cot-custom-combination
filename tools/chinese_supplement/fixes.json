@@ -13,5 +13,85 @@
     "passage": "HousingRoom",
     "from": "setup.and(setup.render_names(_owners), \"no one\")",
     "to": "setup.and(setup.render_names(_owners), \"无人\")"
+  },
+  {
+    "passage": "ShopWidgets",
+    "from": "<<link _shopitem.label ",
+    "to": "<<link `setup.CoTChinese.shopLabel(_shopitem)` "
+  },
+  {
+    "passage": "ShopItem",
+    "from": "<<= $shopitem.label>>",
+    "to": "<<= setup.CoTChinese.shopLabel($shopitem)>>"
+  },
+  {
+    "passage": "ShopWidgets",
+    "from": "new RegExp(RegExp.escape(V.shopsearch), \"i\").test(catitem.label) ||",
+    "to": "new RegExp(RegExp.escape(V.shopsearch), \"i\").test(setup.CoTChinese.shopLabel(catitem)) || new RegExp(RegExp.escape(V.shopsearch), \"i\").test(catitem.label) ||"
+  },
+  {
+    "passage": "ShopWidgets",
+    "from": "_categories[0].name.toUpperFirst()",
+    "to": "setup.CoTChinese.shopText(_categories[0].name.toUpperFirst())"
+  },
+  {
+    "passage": "ShopWidgets",
+    "from": "_categories[_i].name.toUpperFirst()",
+    "to": "setup.CoTChinese.shopText(_categories[_i].name.toUpperFirst())"
+  },
+  {
+    "passage": "ShopMenu",
+    "from": "<<= _shopinfo.description>>",
+    "to": "<<= setup.CoTChinese.shopText(_shopinfo.description)>>"
+  },
+  {
+    "passage": "ShopItem",
+    "from": "<<= _obj.description>>",
+    "to": "<<= setup.CoTChinese.shopText(_obj.description)>>"
+  },
+  {
+    "passage": "ShopItem",
+    "from": "<<= _info.description>>",
+    "to": "<<= setup.CoTChinese.shopText(_info.description)>>"
+  },
+  {
+    "passage": "ShopWidgets",
+    "from": "<<= _obj.description>>",
+    "to": "<<= setup.CoTChinese.shopText(_obj.description)>>"
+  },
+  {
+    "passage": "ShopWidgets",
+    "from": "<<= _shopitem.description>>",
+    "to": "<<= setup.CoTChinese.shopText(_shopitem.description)>>"
+  },
+  {
+    "passage": "ShopWidgets",
+    "from": "<<= _foodobj.description>>",
+    "to": "<<= setup.CoTChinese.shopText(_foodobj.description)>>"
+  },
+  {
+    "passage": "ShopWidgets",
+    "from": "<<= setup.dormstuff[_shopitem.item].description>>",
+    "to": "<<= setup.CoTChinese.shopText(setup.dormstuff[_shopitem.item].description)>>"
+  },
+  {
+    "passage": "SimpleShopMenu",
+    "from": "<<link _shopitem.label ",
+    "to": "<<link `setup.CoTChinese.shopLabel(_shopitem)` "
+  },
+  {
+    "passage": "SimpleShopMenu",
+    "from": "<<= _shopitem.label>>",
+    "to": "<<= setup.CoTChinese.shopText(_shopitem.label)>>"
+  },
+  {
+    "passage": "ShopWidgets",
+    "from": "setup.capitalize_each(_sub_opt)",
+    "to": "setup.CoTChinese.shopOption($shopitem, _sub_name, _sub_opt)"
+  },
+  {
+    "passage": "ShopItem",
+    "from": "setup.capitalize_each(opt)",
+    "to": "setup.CoTChinese.shopOption(V.shopitem, sub, opt)"
   }
 ]

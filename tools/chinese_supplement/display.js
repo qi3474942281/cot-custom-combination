@@ -1,5 +1,6 @@
 (() => {
   const terms = /* TERMS */;
+  const shopping = /* SHOPPING */;
   const escape = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const pattern = new RegExp('(^|[^A-Za-z0-9_])(' + Object.keys(terms)
     .sort((a, b) => b.length - a.length).map(escape).join('|') + ')(?=$|[^A-Za-z0-9_])', 'g');
@@ -15,7 +16,35 @@
     if (address) return '番红花街 ' + address[1] + ' 号';
     return text(key);
   }
-  setup.CoTChinese = {text, unitLabel, version: '1.0.0', termCount: Object.keys(terms).length};
+  function shopText(value) {
+    return typeof value === 'string' ? (shopping[value] || text(value)) : value;
+  }
+  function shopLabel(item) {
+    if (!item) return '';
+    const label = item.label || item.item || '';
+    if (/[\u4e00-\u9fff]/.test(label)) return label;
+    const translated = shopText(label);
+    if (translated !== label) return translated;
+    const info = setup.Shops?.databases?.[item.type]?.[item.item];
+    const name = info?.cn_name;
+    return typeof name === 'string' && /[\u4e00-\u9fff]/.test(name) && !name.includes('%') ? name : label;
+  }
+  function shopOption(item, sub, value) {
+    const info = setup.Shops?.databases?.[item?.type]?.[item?.item];
+    const values = info?.['sub ' + sub];
+    const names = info?.[sub + '_cn_name'];
+    const index = Array.isArray(values) ? values.indexOf(value) : -1;
+    if (index >= 0 && Array.isArray(names) && names[index]) return names[index];
+    for (const key of ['clothes_standard_cloth_colors', 'clothes_advanced_cloth_colors',
+      'clothes_standard_denim_colors', 'clothes_standard_leather_colors', 'clothes_neon_colors',
+      'standard_furniture_colors', 'standard_furniture_leather_colors']) {
+      const i = setup[key]?.indexOf(value) ?? -1;
+      if (i >= 0 && setup[key + '_cn_name']?.[i]) return setup[key + '_cn_name'][i];
+    }
+    return shopText(typeof value === 'string' ? setup.capitalize_each(value) : value);
+  }
+  setup.CoTChinese = {text, unitLabel, shopText, shopLabel, shopOption, version: '1.1.0',
+    termCount: Object.keys(terms).length, shoppingCount: Object.keys(shopping).length};
 
   // Only presentation data: keep housing keys, room IDs and save variables intact.
   if (setup.Housing) {
@@ -46,12 +75,20 @@
     // Unit identifiers are formatted for display, never renamed in game state.
     const units = node.data.replace(/(^|[^A-Za-z0-9_])(Suite \d+|Apartment \d+)(?=$|[^A-Za-z0-9_])/g,
       (_, prefix, key) => prefix + unitLabel(key));
-    const translated = text(units);
+    const core = units.trim();
+    const translated = shopping[core] ? units.replace(core, () => shopping[core]) : text(units);
     if (translated !== node.data) node.data = translated;
   }
   function walk(root) {
     if (root.nodeType === Node.TEXT_NODE) { translateNode(root); return; }
     if (root.nodeType !== Node.ELEMENT_NODE) return;
+    // option.label changes the visible caption without changing implicit values.
+    const options = root.matches('option') ? [root] : root.querySelectorAll('option');
+    for (const option of options) {
+      if (!option.closest(roots)) continue;
+      const label = shopText(option.label);
+      if (label !== option.label) option.label = label;
+    }
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     let node;
     while ((node = walker.nextNode())) translateNode(node);
