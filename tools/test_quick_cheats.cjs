@@ -72,12 +72,15 @@ module.exports=async function(p,script){
  assert.deepEqual(off.legacy,{age:16,start:4});assert.deepEqual(off.denied,[false,false,false]);assert(off.unchanged);assert.equal(off.buttons,0);assert(off.text.includes('成为恋人'));
  const saved=await script(p,`
   State.variables.cheatsenabled=true;
+  // SugarCube saves passage-history moments. Commit the next moment as a
+  // normal passage transition does before testing the persisted slot.
+  State.create(State.passage);
   const ok=Save.slots.save(0,'Quick cheats regression');
   const slot=Save.slots.get(0);
-  const exported=JSON.stringify(slot);
-  const parsed=JSON.parse(exported);
-  window.__result={ok,id:parsed.id,containsAge:exported.includes('partneredday'),left:State.variables.lefthouse,mod:setup.CoTQuickCheats.version};
+  const history=State.deltaDecode(slot.state.delta);
+  const vars=history[slot.state.index].variables;
+  window.__result={ok,id:slot.id,start:vars.people['CoT Test A'].partneredday,legacyStart:vars.people['CoT Legacy'].relationshipChangeDay,needs:vars.pcneeds,left:vars.lefthouse,mod:setup.CoTQuickCheats.version};
  `);
- assert.equal(saved.ok,true);assert.equal(saved.id,'course-of-temptation');assert(saved.containsAge);assert.deepEqual(saved.left,[]);assert.equal(saved.mod,'1.0.0');
+ assert.equal(saved.ok,true);assert.equal(saved.id,'course-of-temptation');assert.equal(saved.start,20);assert.equal(saved.legacyStart,4);assert.equal(saved.needs.Rest,1000);assert.deepEqual(saved.left,[]);assert.equal(saved.mod,'1.0.0');
  console.log('QUICK CHEATS PASS',JSON.stringify({house,needs:needs.needs,added,bounds,legacy:off.legacy,save:saved}));
 };
