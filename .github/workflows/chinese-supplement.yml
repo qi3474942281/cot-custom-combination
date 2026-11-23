@@ -1,7 +1,7 @@
 name: Validate Chinese supplement
 on:
   push:
-    branches: ["improve/chinese-085e", "fix/shop-chinese-085e", "fix/stylist-chinese-085e"]
+    branches: ["improve/chinese-085e", "fix/shop-chinese-085e", "fix/stylist-chinese-085e", "fix/chinese-ui-audit-085e"]
 permissions:
   contents: read
 jobs:
@@ -21,7 +21,8 @@ jobs:
           python tools/build_chinese_supplement.py
           git diff --exit-code -- mods/CoTChineseSupplement.mod.zip
           python tools/test_text_hotfix.py
-          npm install --no-save playwright@1.56.1
+          npm install --no-save playwright@1.56.1 acorn@8
+          node tools/audit_chinese_ui.cjs
       - name: Test actual rental and display in Chromium
         env:
           COT_ENGINE: chromium
@@ -36,4 +37,6 @@ jobs:
         if: always()
         with:
           name: chinese-test-results
-          path: chinese-test-results.json
+          path: |
+            chinese-test-results.json
+            chinese-ui-audit.json

@@ -138,5 +138,15 @@
     "passage": "ValkyrieWidgets",
     "from": "!setup.palette.colors[$palette]",
     "to": "!setup.palette.colors[$palettechoice]"
+  },
+  {
+    "passage": "InPersonDialogueHangoutPlanning",
+    "from": "<<set _linkname to _choice.toUpperFirst()>>",
+    "to": "<<set _linkname to setup.CoTChinese.activityLabel(_choice)>>"
+  },
+  {
+    "passage": "PhoneTextMenu",
+    "from": "<<set _linkname to _choice.toUpperFirst()>>",
+    "to": "<<set _linkname to setup.CoTChinese.activityLabel(_choice)>>"
   }
 ]

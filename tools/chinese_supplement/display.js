@@ -2,6 +2,16 @@
   const terms = /* TERMS */;
   const shopping = /* SHOPPING */;
   const stylist = /* STYLIST */;
+  const metadata = /* METADATA */;
+  const ui = /* UI */;
+  // Exact, case-insensitive captions only. Never replace arbitrary fragments
+  // with metadata translations: a color or item key may also be a person's name.
+  const normalize = value => value.trim().replace(/\s+/g, ' ').toLowerCase();
+  const captions = new Map();
+  for (const dictionary of [metadata, shopping, ui.labels, ui.activities]) {
+    for (const [source, label] of Object.entries(dictionary)) captions.set(normalize(source), label);
+  }
+  const exact = value => typeof value === 'string' ? captions.get(normalize(value)) : undefined;
   const escape = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const pattern = new RegExp('(^|[^A-Za-z0-9_])(' + Object.keys(terms)
     .sort((a, b) => b.length - a.length).map(escape).join('|') + ')(?=$|[^A-Za-z0-9_])', 'g');
@@ -18,7 +28,7 @@
     return text(key);
   }
   function shopText(value) {
-    return typeof value === 'string' ? (shopping[value] || text(value)) : value;
+    return typeof value === 'string' ? (exact(value) || text(value)) : value;
   }
   function shopLabel(item) {
     if (!item) return '';
@@ -31,6 +41,7 @@
     return typeof name === 'string' && /[\u4e00-\u9fff]/.test(name) && !name.includes('%') ? name : label;
   }
   function shopOption(item, sub, value) {
+    if (ui.options[sub]?.[value]) return ui.options[sub][value];
     const info = setup.Shops?.databases?.[item?.type]?.[item?.item];
     const values = info?.['sub ' + sub];
     const names = info?.[sub + '_cn_name'];
@@ -61,8 +72,12 @@
     const label = shopOption({...item, type: 'clothes'}, 'style', item.style);
     return /[\u4e00-\u9fff]/.test(label || '') ? label : styleLabel(item.style);
   }
-  setup.CoTChinese = {text, unitLabel, shopText, shopLabel, shopOption,
-    styleLabel, styleOptions, paletteLabel, colorLabel, garmentLabel, garmentStyleLabel, version: '1.2.0',
+  function activityLabel(value) { return ui.activities[value] || shopText(value); }
+  for (const [key, info] of Object.entries(setup.Relationships?.activities || {})) {
+    if (ui.activities[key]) info.cn_name = ui.activities[key];
+  }
+  setup.CoTChinese = {activityLabel, text, unitLabel, shopText, shopLabel, shopOption,
+    styleLabel, styleOptions, paletteLabel, colorLabel, garmentLabel, garmentStyleLabel, version: '1.3.0',
     termCount: Object.keys(terms).length, shoppingCount: Object.keys(shopping).length};
 
   // Only presentation data: keep housing keys, room IDs and save variables intact.
@@ -95,7 +110,8 @@
     const units = node.data.replace(/(^|[^A-Za-z0-9_])(Suite \d+|Apartment \d+)(?=$|[^A-Za-z0-9_])/g,
       (_, prefix, key) => prefix + unitLabel(key));
     const core = units.trim();
-    const translated = shopping[core] ? units.replace(core, () => shopping[core]) : text(units);
+    const caption = exact(core);
+    const translated = caption ? units.replace(core, () => caption) : text(units);
     if (translated !== node.data) node.data = translated;
   }
   function walk(root) {

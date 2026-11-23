@@ -1,0 +1,23 @@
+{
+  "activities": {
+    "see a movie": "看电影", "have dinner": "共进晚餐", "hit the arcade": "去游戏厅", "hit the gym": "去健身房",
+    "have a park picnic": "去公园野餐", "grab a coffee": "喝杯咖啡", "go to the planetarium": "去天文馆", "hit the bowling alley": "打保龄球",
+    "study together": "一起学习", "just chill": "一起放松", "hang out as a group": "和朋友们聚会", "hang out as a polycule": "和伴侣们聚会",
+    "hang out with the subs": "和顺从者们聚会", "meet up for a vibe check": "见面聊聊合不合拍"
+  },
+  "options": {
+    "wood": {"oak":"橡木", "maple":"枫木", "cherry":"樱桃木", "walnut":"胡桃木", "pine":"松木"}
+  },
+  "labels": {
+    "few headshots":"几张头像照", "few shots of their pet":"几张宠物照", "few shots of them modeling cosplay":"几张角色扮演照", "few boudoir shots":"几张私房照", "few tasteful nude shots":"几张艺术人体照",
+    "gay":"男同性恋", "lesbian":"女同性恋", "casual":"休闲", "relaxed fit":"宽松版型", "dark blue":"深蓝色", "worn":"穿旧的", "faded gray":"褪色灰", "a waifu":"动漫少女", "dark gray":"深灰色", "navy blue":"海军蓝", "indigo":"靛蓝色", "faded blue":"褪色蓝", "form-fitting":"修身", "stretchy":"弹力", "a band logo":"乐队标志", "fishnet":"网眼", "mesh":"网纱", "skintight":"紧身",
+    "a skeleton on a dark background":"深色背景上的骷髅", "a collage of suggestive text and swear words":"暗示性文字与脏话拼贴", "a bold checkerboard pattern":"醒目的棋盘格纹", "leather":"皮革", "'STOP STARTING'":"“别再开始”字样", "a punk bad's logo":"朋克乐队标志", "light gray":"浅灰色", "tan":"棕褐色", "olive green":"橄榄绿", "gold":"金色", "orange":"橙色", "black and white":"黑白色", "salmon":"鲑红色", "rainbow":"彩虹色", "teal":"蓝绿色", "turquoise":"绿松石色", "cotton":"棉质", "leopard":"豹纹", "fish-scale print":"鱼鳞纹", "snake-skin print":"蛇皮纹", "short":"短款", "pink":"粉色", "small ascot":"小型阿斯科特领巾", "rainbow pride":"彩虹骄傲", "non-binary pride":"非二元骄傲",
+    "Off Duty Stripper":"休班脱衣舞者", "Every Hole's A Goal":"每个洞都是目标", "DICK HUNTER":"猎屌者", "Slippery When Wet":"湿时易滑", "Generic T-Shirt Slogan":"普通T恤标语", "WILD AND FREE":"狂野自由", "BEAST MODE":"野兽模式", "Where's My Coffee":"我的咖啡呢", "high-cut":"高叉", "unzipped":"拉链敞开", "baggy":"宽松", "distressed":"做旧", "faded":"褪色", "vinyl":"乙烯基", "deep v-cut":"深V领", "skater":"滑板裙式", "pleated":"百褶", "pencil":"铅笔裙式", "boot cut":"微喇裤脚", "fuzzy":"毛绒", "floral-patterned":"花卉图案", "faded grey":"褪色灰", "light blue":"浅蓝色", "silver":"银色", "dark purple":"深紫色", "normal-cut":"普通剪裁", "black steel":"黑钢色", "niobium":"铌色", "lavender":"薰衣草紫", "long sleeves":"长袖", "pentagra v-cut":"五芒星V领", "low-cut":"低胸", "wide":"宽款", "platinum":"铂金色", "narrow":"窄款", "hearts":"爱心图案", "ivory white":"象牙白", "strappy":"系带", "matte":"哑光", "rose":"玫瑰色", "neon blue":"荧光蓝", "neon purple":"荧光紫", "bronze":"青铜色", "hot pink":"亮粉色", "burgundy":"酒红色", "bunny":"兔子", "coral":"珊瑚色", "cherry":"樱桃红", "raspberry":"覆盆子色", "lime green":"青柠绿", "emerald green":"祖母绿", "violet":"紫罗兰色", "neon orange":"荧光橙", "neon yellow":"荧光黄", "neon green":"荧光绿", "neon violet":"荧光紫罗兰色", "neon pink":"荧光粉",
+    "Friendly reply":"友善回应", "Positive reply":"积极回应", "Negative reply":"消极回应", "Nice reply":"亲切回应", "beige":"米色", "titanium":"钛色", "light brown":"浅棕色", "dark brown":"深棕色", "white and brown dappled":"白棕斑纹", "tan and white":"棕褐与白色", "brown and white":"棕白色", "salt and pepper":"黑白杂色", "anerythristic":"缺红素花色", "amelanistic":"白化花色", "hypomelanistic":"淡化花色", "okeetee":"奥基蒂花色", "sunglow":"日光花色", "orange-gold":"橙金色", "blue and gold":"蓝金色", "hyacinth":"风信子蓝", "mottled gray":"灰色斑纹", "Crush":"暗恋", "orange and black":"橙黑色", "bright orange":"亮橙色", "dark green":"深绿色", "bright purple":"亮紫色", "soft purple":"淡紫色", "faded black":"褪色黑", "dark red":"深红色",
+    "Family Planning":"家庭计划", "Nursing":"哺乳用品", "Manual Breast Pump":"手动吸奶器", "Electric Double Breast Pump":"电动双边吸奶器", "Breastmilk Storage Bags":"母乳储存袋", "Burglar":"窃贼", "Fairy":"仙女", "Sleeves":"袖长", "Small Tattoos":"小型纹身",
+    "Customize your BFF, then off to college!":"自定义你的挚友，然后去上大学！", "They should change":"让对方换一换", "Sure":"当然", "Check out our virtual personal stylist":"试用我们的虚拟私人造型师", "Yes":"是", "(Delete)":"（删除）", "Category:":"类别：", "import":"导入",
+    "Test Time":"测试时间", "Test Kink Warnings":"测试偏好提示", "Test Makeout":"测试亲热", "Test Encounter":"测试互动", "Test Event":"测试事件", "Test Sub Rules":"测试顺从规则",
+    "not important":"不重要", "important":"重要", "very important":"很重要", "must-have":"必须具备"
+  },
+  "preserve": ["F-K", "Brandolorian"]
+}

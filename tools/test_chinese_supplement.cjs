@@ -208,6 +208,75 @@ async function run(type,engine){
   assert(recommendation.outfit.includes('休闲'));assert(recommendation.outfit.includes('T恤'));
   assert(recommendation.outfit.includes('瓦尔基里服饰'));
   assert.equal(recommendation.paletteKey,'royal');assert(recommendation.paletteText.includes('皇家色调'));assert(recommendation.unchanged);
+  // Inspect every real catalogue variant, not only screenshot fixtures.
+  const catalogue=await script(p,`
+   const missing=[];let checked=0;
+   const preserved=['F-K','Brandolorian'];
+   const snapshot=JSON.stringify(setup.Shops.databases);
+   for(const [type,db] of Object.entries(setup.Shops.databases)){
+    for(const [item,info] of Object.entries(db)){
+     if(!info||typeof info!=='object')continue;
+     for(const [field,values] of Object.entries(info)){
+      if(!field.startsWith('sub ')||!Array.isArray(values))continue;
+      for(const value of values){
+       if(typeof value!=='string'||!/[A-Za-z]{2}/.test(value)||preserved.includes(value))continue;
+       checked++;const label=setup.CoTChinese.shopOption({type,item},field.slice(4),value);
+       if(!/[\\u4e00-\\u9fff]/.test(label))missing.push({type,item,field,value,label});
+      }
+     }
+    }
+   }
+   window.__result={checked,missing,unchanged:JSON.stringify(setup.Shops.databases)===snapshot};
+  `);
+  console.log('ALL CATALOGUE VARIANTS',JSON.stringify(catalogue));
+  assert(catalogue.checked>1000);assert(catalogue.unchanged);assert.deepEqual(catalogue.missing,[]);
+  // Actual wooden desk option widget plus the original mouse handler.
+  const furniture=await script(p,`
+   State.variables.shopitem={type:'dormstuff',item:'wooden desk',label:'wooden desk'};
+   State.variables.showstyles=false;State.temporary.cItem=null;
+   State.temporary.sub_info={wood:[...setup.dormstuff['wooden desk']['sub wood']]};State.temporary.subs={};
+   const host=document.createElement('div');host.id='furniture-audit';document.querySelector('#passages .passage').appendChild(host);
+   const source=Story.get('ShopItem').text;const at=source.indexOf('T.htmlEscape = function');
+   new Wikifier(host,source.slice(source.lastIndexOf('<<script>>',at),source.indexOf('<</script>>',at)+11));
+   new Wikifier(host,'<<shopsubsmenu>>');
+   window.__result={labels:[...host.querySelectorAll('.shop-item-option')].map(n=>n.textContent.trim()),errors:[...host.querySelectorAll('.error')].map(n=>n.textContent)};
+  `);
+  assert.deepEqual(furniture.errors,[]);assert.deepEqual(furniture.labels,['橡木','枫木','樱桃木','胡桃木','松木']);
+  await p.locator('#furniture-audit .shop-item-option').nth(2).dispatchEvent('mousedown');
+  const selectedWood=await script(p,`window.__result={value:State.temporary.subs.wood,label:document.querySelector('#furniture-audit #span-wood').textContent};`);
+  assert.deepEqual(selectedWood,{value:'cherry',label:'樱桃木'});
+  // Both screenshot menus use the real translated page templates and handlers.
+  const dates=await script(p,`
+   window.__dateOriginal={get_type:setup.people.get_type,lives:setup.people.lives,relationship_with:setup.Relationships.relationship_with,is_roommate:setup.Housing.is_roommate,prefers_motel:setup.people.prefers_motel};
+   setup.people.get_type=()=> 'student';setup.people.lives=()=> 'house';setup.Relationships.relationship_with=()=> 'friend';setup.Housing.is_roommate=()=>false;setup.people.prefers_motel=()=>false;
+   State.variables.proposeddate={partner:'audit-partner',type:'date'};State.variables.eventnpc='audit-partner';
+   State.variables.expandphonelinks=true;delete State.variables.phoneresponsemenu;State.variables.planneddate=[];
+   State.temporary.p='audit-partner';
+   const keys=Object.keys(setup.Relationships.activities);window.__dateKeys=JSON.stringify(keys);
+   const root=document.querySelector('#passages .passage');
+   const inPerson=document.createElement('div');inPerson.id='date-audit';root.appendChild(inPerson);
+   new Wikifier(inPerson,Story.get('InPersonDialogueHangoutPlanning').text.replace('<<link _linkname InPersonDialogueHangoutPlanningTime>>','<<link _linkname>>'));
+   const phone=document.createElement('div');phone.id='phone-audit';document.querySelector('#ui-dialog-body').appendChild(phone);
+   new Wikifier(phone,'<<phonetextmenu "hangout location">>');
+   window.__result={activities:keys.map(k=>setup.CoTChinese.activityLabel(k)),
+    inPerson:[...inPerson.querySelectorAll('a')].map(n=>n.textContent.trim()),phone:[...phone.querySelectorAll('a')].map(n=>n.textContent.trim()),
+    errors:[...inPerson.querySelectorAll('.error'),...phone.querySelectorAll('.error')].map(n=>n.textContent),
+    activityKeys:JSON.stringify(Object.keys(setup.Relationships.activities))===window.__dateKeys};
+  `);
+  console.log('DATE MENUS',JSON.stringify(dates));
+  assert.deepEqual(dates.errors,[]);assert(dates.activityKeys);assert.equal(dates.activities.length,14);
+  assert(dates.activities.every(s=>/[\u4e00-\u9fff]/.test(s)));assert(dates.inPerson.length>=10&&dates.phone.length>=10);
+  for(const menu of [dates.inPerson,dates.phone]){
+   assert(menu.every(s=>!/[A-Za-z]{2}/.test(s)));assert(menu.some(s=>s.includes('看电影')));assert(menu.some(s=>s.includes('打保龄球')));
+  }
+  const dateHandler=await script(p,`
+   // Isolate navigation only; the real link must set the proposal's original ID.
+   [...document.querySelectorAll('#date-audit a')].find(a=>a.textContent.includes('看电影')).click();
+   const result={activity:State.variables.proposeddate.activity,location:State.variables.proposeddate.location,header:State.variables.header};
+   setup.people.get_type=window.__dateOriginal.get_type;setup.people.lives=window.__dateOriginal.lives;setup.Relationships.relationship_with=window.__dateOriginal.relationship_with;setup.Housing.is_roommate=window.__dateOriginal.is_roommate;setup.people.prefers_motel=window.__dateOriginal.prefers_motel;
+   window.__result=result;
+  `);
+  assert.equal(dateHandler.activity,'see a movie');assert.equal(dateHandler.location,'Cinema');assert(dateHandler.header.includes('看电影'));
   results.push({engine,pass:true,terms:preserved.terms,rentalErrorBefore:before.errors.length,rentalErrorAfter:after.errors.length,money:after.money,saveId:preserved.id});await context.close();
  }finally{await browser.close();}
 }
