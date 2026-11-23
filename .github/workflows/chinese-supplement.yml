@@ -1,7 +1,7 @@
 name: Validate Chinese supplement
 on:
   push:
-    branches: ["improve/chinese-085e", "fix/shop-chinese-085e", "fix/stylist-chinese-085e", "fix/chinese-ui-audit-085e", "feature/quick-cheats-085e", "feature/next-conception-085e"]
+    branches: ["improve/chinese-085e", "fix/shop-chinese-085e", "fix/stylist-chinese-085e", "fix/chinese-ui-audit-085e", "feature/quick-cheats-085e", "feature/next-conception-085e", "fix/sports-cooldown-085e"]
 permissions:
   contents: read
 jobs:
