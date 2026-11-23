@@ -57,3 +57,9 @@ node tools/test_upgrade.cjs
 `--publish` 可提交并推送已固定版本；未审核的新版本会被拒绝。
 立绘包可用 `python tools/build_npc_portraits.py` 重建，
 文本修复可用 `python tools/build_text_hotfix.py` 重建。
+
+## 界面汉化补充（1.0.0）
+
+新增 `CoTChineseSupplement.mod.zip`，提供 244 个地点、住房、房间和常用界面译名，地图与房间类型译名沿用原汉化。按显示文本匹配，不改住房键、房间 ID、商品键、存档数据或输入/下拉框的值。补充房间名称显示，并修复租房成功提示在住房外调用房间标签导致的报错。保留原汉化、短信修复、图片与立绘。
+
+构建：`python tools/build_chinese_supplement.py`。浏览器回归：`node tools/test_chinese_supplement.cjs`；在隔离配置中重现原租房报错，再检查补丁后的租房扣款、住房登记、房间编号、中文显示、存档标识和输入框值不变。此补充包不代表全部剧情已逐句校对。
