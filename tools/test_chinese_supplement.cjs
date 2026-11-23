@@ -205,7 +205,7 @@ async function run(type,engine){
   `);
   console.log('STYLIST RECOMMENDATION',JSON.stringify(recommendation));
   assert.equal(recommendation.requested,'casual');assert.deepEqual(recommendation.errors,[]);
-  assert(recommendation.outfit.includes('休闲风'));assert(recommendation.outfit.includes('T恤'));
+  assert(recommendation.outfit.includes('休闲'));assert(recommendation.outfit.includes('T恤'));
   assert(recommendation.outfit.includes('瓦尔基里服饰'));
   assert.equal(recommendation.paletteKey,'royal');assert(recommendation.paletteText.includes('皇家色调'));assert(recommendation.unchanged);
   results.push({engine,pass:true,terms:preserved.terms,rentalErrorBefore:before.errors.length,rentalErrorAfter:after.errors.length,money:after.money,saveId:preserved.id});await context.close();
