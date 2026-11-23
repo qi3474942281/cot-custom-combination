@@ -29,8 +29,9 @@ iPhone 上游戏沿用 localStorage 存档；此备份不包含桌面版可能�
 
 1. `ModI18N.mod.zip`：0.8.5e 官方汉化包。
 2. `CoTTextHotfix.mod.zip`：礼物短信及另一处 SugarCube 标签笔误修复，上游已修复时不重复改动。
-3. `CoTGameOriginalImagePack.mod.zip`：0.8.5e 原版图片包。
-4. `NPCVisualization.mod.zip`：适配当前界面的 NPC 和主角立绘。
+3. `CoTChineseSupplement.mod.zip`：动态地点、住房、房间和常用界面译名补充及租房显示修复。
+4. `CoTGameOriginalImagePack.mod.zip`：0.8.5e 原版图片包。
+5. `NPCVisualization.mod.zip`：适配当前界面的 NPC 和主角立绘。
 
 [Maenoko 的立绘原作](https://github.com/Maenoko/NPC-Visualization-Mod)手机版图片及 README 均保留。
 适配包在 NPC 列表、NPC 详情、主角面板和创建角色后的侧栏显示分层静态立绘；
