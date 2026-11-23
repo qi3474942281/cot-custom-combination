@@ -1,0 +1,15 @@
+{
+  "game": "0.8.5e",
+  "scripts": 75,
+  "passages": 5562,
+  "metadataCaptions": 5947,
+  "ambiguousCaptionsExcluded": 363,
+  "displayFieldsInspected": 8737,
+  "unresolvedDisplayFields": [],
+  "residualLiteralControls": {},
+  "preservedBrands": [
+    "F-K",
+    "Brandolorian"
+  ],
+  "excludedFields": "Player input, NPC names, sponsors, legacy migration names and placeholder templates; original identifiers and save data are never renamed."
+}

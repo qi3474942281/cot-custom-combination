@@ -13,23 +13,27 @@ def build():
     fixes = json.loads((SOURCE / 'fixes.json').read_text())
     shopping = json.loads((SOURCE / 'shopping.json').read_text())
     stylist = json.loads((SOURCE / 'stylist.json').read_text())
+    metadata = json.loads((SOURCE / 'metadata.json').read_text())
+    ui = json.loads((SOURCE / 'ui.json').read_text())
     boot = {
-        'name': 'CoTChineseSupplement', 'version': '1.2.0',
+        'name': 'CoTChineseSupplement', 'version': '1.3.0',
         'scriptFileList_earlyload': ['earlyload.js'],
         'scriptFileList': ['display.js'], 'styleFileList': [],
         'tweeFileList': [], 'imgFileList': [],
-        'additionFile': ['README.md', 'terms.json', 'fixes.json', 'shopping.json', 'stylist.json'],
+        'additionFile': ['README.md', 'terms.json', 'fixes.json', 'shopping.json', 'stylist.json', 'metadata.json', 'ui.json'],
         'dependenceInfo': [
             {'modName': 'ModLoader', 'version': '^2.31.2'},
             {'modName': 'ModI18N', 'version': '*'},
             {'modName': 'GameVersion', 'version': '=0.8.5-e'},
         ],
     }
-    files = {name: (SOURCE / name).read_bytes() for name in ['README.md', 'terms.json', 'fixes.json', 'shopping.json', 'stylist.json']}
+    files = {name: (SOURCE / name).read_bytes() for name in ['README.md', 'terms.json', 'fixes.json', 'shopping.json', 'stylist.json', 'metadata.json', 'ui.json']}
     files['boot.json'] = json.dumps(boot, ensure_ascii=False, indent=2).encode()
     for name, marker, data in [('earlyload.js', '/* FIXES */', fixes), ('display.js', '/* TERMS */', terms)]:
         source = (SOURCE / name).read_text()
         if name == 'display.js':
+            source = source.replace('/* METADATA */', json.dumps(metadata, ensure_ascii=False))
+            source = source.replace('/* UI */', json.dumps(ui, ensure_ascii=False))
             assert source.count('/* SHOPPING */') == 1
             source = source.replace('/* SHOPPING */', json.dumps(shopping, ensure_ascii=False))
             assert source.count('/* STYLIST */') == 1
