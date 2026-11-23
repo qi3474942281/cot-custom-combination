@@ -93,5 +93,50 @@
     "passage": "ShopItem",
     "from": "setup.capitalize_each(opt)",
     "to": "setup.CoTChinese.shopOption(V.shopitem, sub, opt)"
+  },
+  {
+    "passage": "VStylistPickStyle",
+    "from": "<<set _displaystyles = _translatedstyles.map(each => each.toUpperFirst()).sort()>>",
+    "to": "<<set _displaystyles = setup.CoTChinese.styleOptions(_translatedstyles.map(each => each.toUpperFirst()).sort())>>"
+  },
+  {
+    "passage": "ValkyrieWidgets",
+    "from": "<span><<= $palettechoice>></span>",
+    "to": "<span><<= setup.CoTChinese.paletteLabel($palettechoice)>></span>"
+  },
+  {
+    "passage": "ValkyrieWidgets",
+    "from": "<span><<= _palette>></span>",
+    "to": "<span><<= setup.CoTChinese.paletteLabel(_palette)>></span>"
+  },
+  {
+    "passage": "ValkyrieWidgets",
+    "from": "+ _each +",
+    "to": "+ setup.CoTChinese.colorLabel(_each) +"
+  },
+  {
+    "passage": "ValkyrieWidgets",
+    "from": "<<= _item.style.toUpperFirst()>>",
+    "to": "<<= setup.CoTChinese.garmentStyleLabel(_item)>>"
+  },
+  {
+    "passage": "ValkyrieWidgets",
+    "from": "<<= _item.label>>",
+    "to": "<<= setup.CoTChinese.garmentLabel(_item)>>"
+  },
+  {
+    "passage": "ValkyrieWidgets",
+    "from": "<<= _item.shop>>",
+    "to": "<<= setup.CoTChinese.shopText(_item.shop || \"Valkyrie Clothing\")>>"
+  },
+  {
+    "passage": "ValkyrieWidgets",
+    "from": "data-palette=\"<<= _palette>>\"",
+    "to": "@data-palette=\"_palette\""
+  },
+  {
+    "passage": "ValkyrieWidgets",
+    "from": "!setup.palette.colors[$palette]",
+    "to": "!setup.palette.colors[$palettechoice]"
   }
 ]

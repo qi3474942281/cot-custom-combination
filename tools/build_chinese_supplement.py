@@ -12,25 +12,28 @@ def build():
     terms = json.loads((SOURCE / 'terms.json').read_text())
     fixes = json.loads((SOURCE / 'fixes.json').read_text())
     shopping = json.loads((SOURCE / 'shopping.json').read_text())
+    stylist = json.loads((SOURCE / 'stylist.json').read_text())
     boot = {
-        'name': 'CoTChineseSupplement', 'version': '1.1.0',
+        'name': 'CoTChineseSupplement', 'version': '1.2.0',
         'scriptFileList_earlyload': ['earlyload.js'],
         'scriptFileList': ['display.js'], 'styleFileList': [],
         'tweeFileList': [], 'imgFileList': [],
-        'additionFile': ['README.md', 'terms.json', 'fixes.json', 'shopping.json'],
+        'additionFile': ['README.md', 'terms.json', 'fixes.json', 'shopping.json', 'stylist.json'],
         'dependenceInfo': [
             {'modName': 'ModLoader', 'version': '^2.31.2'},
             {'modName': 'ModI18N', 'version': '*'},
             {'modName': 'GameVersion', 'version': '=0.8.5-e'},
         ],
     }
-    files = {name: (SOURCE / name).read_bytes() for name in ['README.md', 'terms.json', 'fixes.json', 'shopping.json']}
+    files = {name: (SOURCE / name).read_bytes() for name in ['README.md', 'terms.json', 'fixes.json', 'shopping.json', 'stylist.json']}
     files['boot.json'] = json.dumps(boot, ensure_ascii=False, indent=2).encode()
     for name, marker, data in [('earlyload.js', '/* FIXES */', fixes), ('display.js', '/* TERMS */', terms)]:
         source = (SOURCE / name).read_text()
         if name == 'display.js':
             assert source.count('/* SHOPPING */') == 1
             source = source.replace('/* SHOPPING */', json.dumps(shopping, ensure_ascii=False))
+            assert source.count('/* STYLIST */') == 1
+            source = source.replace('/* STYLIST */', json.dumps(stylist, ensure_ascii=False))
         assert source.count(marker) == 1
         files[name] = source.replace(marker, json.dumps(data, ensure_ascii=False)).encode()
     output = io.BytesIO()

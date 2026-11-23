@@ -155,6 +155,59 @@ async function run(type,engine){
   });
   await p.waitForFunction(()=>document.querySelector('#shopping-option option').label==='不限制');
   assert.equal(await p.evaluate(()=>document.querySelector('#shopping-option').value),'No limit');
+  // Reproduce the exact page in the user's screenshot, including the real
+  // SugarCube listbox and its change handler, rather than a synthetic option.
+  const stylist=await script(p,`
+   State.variables.shop='Valkyrie Clothing';State.variables.palettechoice='midnight';
+   delete State.variables.styledoutfit;State.variables.showstyles=false;
+   const originalPalettes=JSON.stringify(setup.palette.colors);
+   const sourceStyles=setup.clothes_styles.filter(s=>s!=='costume');
+   const aliases={schoolpride:'college pride',fashionista:'fashionable',dressy:'preppy',geek:'geeky',punk:'punky',greekpride:'greek pride'};
+   const rawStyles=sourceStyles.map(s=>aliases[s]||s).map(s=>s.toUpperFirst()).sort();
+   const host=document.createElement('div');host.id='stylist-test';
+   document.querySelector('#passages .passage').appendChild(host);
+   new Wikifier(host,Story.get('VStylistPickStyle').text);
+   window.__realOutfitGenerator=setup.roll_stylish_outfit;
+   setup.roll_stylish_outfit=style=>{
+     window.__requestedStylistStyle=style;
+     return {clothes:[{item:'T-shirt',label:'T-shirt',style:'casual',shop:'Valkyrie Clothing'}]};
+   };
+   window.__originalPaletteData=originalPalettes;
+   window.__result={rawStyles,mapValues:[...setup.CoTChinese.styleOptions(rawStyles).values()],
+    options:[...host.querySelector('select').options].map(o=>({text:o.textContent,label:o.label,value:o.value})),
+    selectedPalette:host.querySelector('#palette-selected').textContent,
+    paletteLabels:[...host.querySelectorAll('.palette-option > span:first-child')].map(n=>n.textContent),
+    paletteKeys:[...host.querySelectorAll('.palette-option')].map(n=>n.getAttribute('data-palette')),
+    allKeys:Object.keys(setup.palette.colors),allColors:[...new Set(Object.values(setup.palette.colors).flat())].map(v=>setup.CoTChinese.colorLabel(v)),
+    errors:[...host.querySelectorAll('.error')].map(n=>n.textContent)};
+  `);
+  console.log('STYLIST',JSON.stringify(stylist));
+  assert.deepEqual(stylist.errors,[]);assert.deepEqual(stylist.mapValues,stylist.rawStyles);
+  assert(stylist.options.length===17);assert(stylist.options.every(o=>/[\u4e00-\u9fff]/.test(o.text)&&/[\u4e00-\u9fff]/.test(o.label)));
+  assert(stylist.options.some(o=>o.text==='波西米亚风'));assert(stylist.options.some(o=>o.text==='休闲风'));
+  assert(stylist.selectedPalette.includes('午夜'));assert(!/[A-Za-z]/.test(stylist.selectedPalette));
+  assert.equal(stylist.paletteLabels.length,112);assert(stylist.paletteLabels.every(s=>/[\u4e00-\u9fff]/.test(s)));
+  assert.deepEqual(stylist.paletteKeys,stylist.allKeys);assert(stylist.allColors.every(s=>/[\u4e00-\u9fff]/.test(s)));
+  await p.locator('#stylist-test select').selectOption({label:'休闲风'});
+  const choice=await script(p,'window.__result=State.variables.stylerequest;');
+  assert.equal(choice,'Casual');
+  await p.locator('#stylist-test a').filter({hasText:'推荐一套'}).click();
+  const recommendation=await script(p,`
+   const host=document.querySelector('#stylist-test');
+   setup.roll_stylish_outfit=window.__realOutfitGenerator;
+   State.variables.palettechoice='royal';
+   const palette=document.createElement('div');palette.id='retained-palette-test';host.appendChild(palette);
+   new Wikifier(palette,'<<palettedropdown>>');
+   window.__result={requested:window.__requestedStylistStyle,outfit:host.querySelector('#outfit').textContent,
+    paletteKey:State.variables.palettechoice,paletteText:palette.querySelector('.palette-selected').textContent,
+    unchanged:JSON.stringify(setup.palette.colors)===window.__originalPaletteData,
+    errors:[...host.querySelectorAll('.error')].map(n=>n.textContent)};
+  `);
+  console.log('STYLIST RECOMMENDATION',JSON.stringify(recommendation));
+  assert.equal(recommendation.requested,'casual');assert.deepEqual(recommendation.errors,[]);
+  assert(recommendation.outfit.includes('休闲'));assert(recommendation.outfit.includes('T恤'));
+  assert(recommendation.outfit.includes('瓦尔基里服饰'));
+  assert.equal(recommendation.paletteKey,'royal');assert(recommendation.paletteText.includes('皇家色调'));assert(recommendation.unchanged);
   results.push({engine,pass:true,terms:preserved.terms,rentalErrorBefore:before.errors.length,rentalErrorAfter:after.errors.length,money:after.money,saveId:preserved.id});await context.close();
  }finally{await browser.close();}
 }

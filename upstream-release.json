@@ -1,7 +1,7 @@
 {
   "tag": "v0.8.5e-1.0.0",
   "version": "0.8.5e",
-  "build": "cot-085e-cn2",
+  "build": "cot-085e-cn3",
   "source": "https://github.com/BlackTeaPie/Course-of-Temptation-Chinese-Localization/releases/tag/v0.8.5e-1.0.0",
   "assets": {
     "CoT-ModLoader-v0.8.5e-v2.101.1-polyfill.zip": {
