@@ -13,7 +13,7 @@ module.exports=async function(p,script){
   window.__result={natural:Boolean(P.will_become_pregnant({person:'CoT Test A'},State.variables.pc)),label:document.querySelector('#cot-next-conception').textContent,version:setup.CoTQuickCheats.version};
  `);
  try{
-  assert.equal(ready.natural,false);assert(ready.label.includes('下一次性爱受孕几率100%'));assert.equal(ready.version,'1.1.1');
+  assert.equal(ready.natural,false);assert(ready.label.includes('下一次性爱受孕几率100%'));assert.equal(ready.version,'1.2.0');
   await p.locator('#cot-next-conception a').filter({hasText:'下一次性爱受孕几率100%'}).click();
   const waiting=await script(p,`
    State.create(State.passage);Save.slots.save(1,'Pending conception cheat');
